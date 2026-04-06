@@ -1,0 +1,85 @@
+﻿{
+    "ProjectJson": {
+    "ComponentType": "Project",
+    "Name": "DemoProject",
+    "Environments": {
+        "Staging": {
+            "BASE_URL": "https://jsonplaceholder.typicode.com",
+            "API_KEY": "demo-key"
+        }
+    },
+    "GlobalVariables": {
+        "clientId": {
+            "Value": "testClient",
+            "IsMutable": false,
+            "IsSensitive": false
+        }
+    },
+    "GlobalLogLevel": "ComponentExecution",
+    "DataRetentionDays": 0,
+    "Children": [
+        {
+            "ComponentType": "TestPlan",
+            "Name": "Get Post Test",
+            "ScopedVariables": {
+                "postId": {
+                    "Value": 1,
+                    "IsMutable": true,
+                    "IsSensitive": false
+                }
+            },
+            "Children": [
+                {
+                    "ComponentType": "Http",
+                    "Name": "Fetch Post",
+                    "Url": "${BASE_URL}/posts/${postId}",
+                    "Method": "GET",
+                    "Headers": {
+                        "Accept": "application/json"
+                    },
+                    "Authentication": {
+                        "Type": "ApiKey",
+                        "ApiKey": "${API_KEY}",
+                        "HeaderName": "X-API-Key"
+                    },
+                    "Extractions": [
+                        {
+                            "Source": "$.id",
+                            "TargetVariable": "extractedId",
+                            "Type": "JsonPath"
+                        }
+                    ],
+                    "Assertions": [
+                        {
+                            "AssertionType": "Direct",
+                            "Behavior": "Fatal",
+                            "Path": "$.statusCode",
+                            "Operator": "Equals",
+                            "ExpectedValue": 200
+                        },
+                        {
+                            "AssertionType": "Variable",
+                            "Behavior": "Assert",
+                            "Variable": "extractedId",
+                            "Operator": "Equals",
+                            "ExpectedValue": 1
+                        }
+                    ],
+                    "RetryPolicy": {
+                        "MaxAttempts": 2,
+                        "BackoffMs": 500,
+                        "ExponentialBackoff": true,
+                        "RetryOn": [ "StatusCode:500-599" ]
+                    }
+                }
+            ]
+        }
+    ]
+},
+    "EnvironmentName": "Staging",
+    "LogLevel": "Verbose",
+    "RunAllTestPlans": false,
+    "TestPlanNames": [ "Login Flow", "Purchase Flow" ],
+    "StopOnFirstFailure": true,
+    "IncludeHistory": true
+}
