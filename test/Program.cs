@@ -1,31 +1,42 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization;
-using TestAutomationEngine.Core;
-using TestAutomationEngine.Reporting;
+﻿using TestAutomationEngine.Core;
+using TestAutomationEngine;
+using Microsoft.Extensions.Logging;
 
-namespace JsonProjectRunner
+class Program
 {
-    class Program
+    static async Task Main(string[] args)
     {
-        static async Task Main(string[] args)
-        {
-            string commandJson = File.ReadAllText("runCommand.json");
-            //var request = JsonSerializer.Deserialize<TestExecutionRequest>(commandJson);
-            var request = JsonSerializer.Deserialize<TestExecutionRequest>(commandJson, ProjectSerializer.Options);
-            var executor = new TestExecutor();
-            var result = await executor.ExecuteAsync(request);
+        // Load the JSON file (save the above JSON as "demo_project.json")
+        string json = await File.ReadAllTextAsync("demo_project.json");
+        var project = Project.FromJson(json);
 
-            Console.WriteLine($"Success: {result.Success}");
-            Console.WriteLine($"Duration: {result.Duration}");
-            foreach (var planResult in result.TestPlanResults)
-            {
-                Console.WriteLine($"  {planResult.Name}: {(planResult.Success ? "PASS" : "FAIL")} ({planResult.DurationMs}ms)");
-            }
-            if (result.IncludeHistory)
-            {
-                File.WriteAllText("report.html", result.FullReportHtml);
-                Console.WriteLine("Full HTML report saved to report.html");
-            }
+        // Set up logging (optional)
+        using var loggerFactory = LoggerFactory.Create(builder =>
+        {
+            builder.AddConsole().SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Debug);
+        });
+
+        // Run the project
+        var runner = new ProjectRunner(project)
+        {
+            EnvironmentName = "Dev",   // matches environment in JSON
+            LogLevel = TestAutomationEngine.Core.LogLevel.ComponentExecution
+        };
+
+        var result = await runner.RunAsync();
+
+        // Output summary
+        Console.WriteLine($"\n=== EXECUTION FINISHED ===");
+        Console.WriteLine($"Success: {result.Success}");
+        foreach (var planResult in result.TestPlanResults)
+        {
+            Console.WriteLine($"  {planResult.Component.Name}: {(planResult.Success ? "PASS" : "FAIL")} ({planResult.DurationMs}ms)");
+            foreach (var assert in planResult.AssertionResults.Where(a => !a.Passed))
+                Console.WriteLine($"    FAIL: {assert.Message}");
         }
+
+        // Optionally save result as JSON or JUnit
+        var junit = new TestAutomationEngine.Reporting.JUnitFormatter().Format(result);
+        await File.WriteAllTextAsync("report.xml", junit);
     }
 }

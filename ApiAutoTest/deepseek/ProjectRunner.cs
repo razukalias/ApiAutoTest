@@ -1,4 +1,5 @@
-﻿// ProjectRunner.cs
+﻿// ProjectRunner.cs (modified)
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -12,14 +13,22 @@ namespace TestAutomationEngine.Core
         public LogLevel LogLevel { get; set; } = LogLevel.Summary;
         public IDebugger? Debugger { get; set; }
 
+        /// <summary>Component filters to apply before execution.</summary>
+        public List<ComponentFilter>? ComponentFilters { get; set; }
+
         public ProjectRunner(Project project)
         {
             _project = project;
         }
 
-        // ProjectRunner.cs (updated RunAsync)
         public async Task<ProjectResult> RunAsync()
         {
+            // Apply component filters to the project tree if provided
+            if (ComponentFilters != null && ComponentFilters.Count > 0)
+            {
+                ComponentFilterer.ApplyFilters(_project, ComponentFilters);
+            }
+
             var context = new ExecutionContext(minLogLevel: LogLevel, debugger: Debugger)
             {
                 EnvironmentName = EnvironmentName
@@ -30,6 +39,7 @@ namespace TestAutomationEngine.Core
                 EnvironmentUsed = EnvironmentName,
                 LogLevel = LogLevel
             };
+
             foreach (var plan in _project.Children)
             {
                 try
@@ -39,7 +49,6 @@ namespace TestAutomationEngine.Core
                 }
                 catch (AssertionFailedException ex)
                 {
-                    // Fatal assertion: stop this TestPlan, but continue with others
                     var failedResult = new ComponentResult { Component = plan, HasUnhandledException = true, Exception = ex };
                     result.TestPlanResults.Add(failedResult);
                     context.Log(LogLevel.Errors, $"Fatal assertion failed in TestPlan '{plan.Name}': {ex.Message}");
@@ -56,7 +65,6 @@ namespace TestAutomationEngine.Core
             var json = JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
             await File.WriteAllTextAsync(filePath, json);
 
-            // Retention cleanup
             if (_project.DataRetentionDays > 0)
             {
                 var cutoff = DateTime.Now.AddDays(-_project.DataRetentionDays);

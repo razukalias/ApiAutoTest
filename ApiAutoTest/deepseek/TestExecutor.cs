@@ -7,16 +7,15 @@ namespace TestAutomationEngine.Core
 {
     public class TestExecutor
     {
+        // TestExecutor.cs (modified section)
         public async Task<TestExecutionResult> ExecuteAsync(TestExecutionRequest request)
         {
             var result = new TestExecutionResult { StartTime = DateTime.UtcNow };
-            request.IncludeHistory = request.IncludeHistory;  // <-- ensure this is set in the result for later use
+            result.IncludeHistory = request.IncludeHistory;
 
             try
             {
-                // 1. Deserialize project from JSON
                 var project = request.Project;
-               // var project = Project.FromJson(request.ProjectJson);
                 if (project == null)
                 {
                     result.Errors.Add("Invalid project JSON");
@@ -24,7 +23,7 @@ namespace TestAutomationEngine.Core
                     return result;
                 }
 
-                // 2. Determine which test plans to run
+                // Determine which test plans to run
                 var plansToRun = request.RunAllTestPlans
                     ? project.Children
                     : project.Children.Where(p => request.TestPlanNames.Contains(p.Name)).ToList();
@@ -36,56 +35,49 @@ namespace TestAutomationEngine.Core
                     return result;
                 }
 
-                // 3. Run each selected test plan (optionally stop on first failure)
-                bool hasFailure = false;
-                foreach (var plan in plansToRun)
+                // Create a filtered project containing only the selected test plans
+                var filteredProject = new Project
                 {
-                    if (request.StopOnFirstFailure && hasFailure)
-                        break;
+                    Name = project.Name,
+                    Environments = project.Environments,
+                    GlobalVariables = project.GlobalVariables,
+                    GlobalLogLevel = project.GlobalLogLevel,
+                    DataRetentionDays = project.DataRetentionDays
+                };
+                filteredProject.Children.AddRange(plansToRun);
 
-                    // Create a temporary project containing only this test plan
-                    var singlePlanProject = new Project
-                    {
-                        Name = project.Name,
-                        Environments = project.Environments,
-                        GlobalVariables = project.GlobalVariables,
-                        GlobalLogLevel = project.GlobalLogLevel
-                    };
-                    singlePlanProject.Children.Add(plan);
+                // Use ProjectRunner with component filters
+                var runner = new ProjectRunner(filteredProject)
+                {
+                    EnvironmentName = request.EnvironmentName,
+                    LogLevel = request.LogLevel,
+                    ComponentFilters = request.ComponentFilters  // <-- Pass filters here
+                };
 
-                    var runner = new ProjectRunner(singlePlanProject)
-                    {
-                        EnvironmentName = request.EnvironmentName,
-                        LogLevel = request.LogLevel
-                    };
-                    var planResult = await runner.RunAsync();
+                var fullResult = await runner.RunAsync();
 
+                // Build summaries
+                foreach (var planResult in fullResult.TestPlanResults)
+                {
                     var summary = new TestPlanResultSummary
                     {
-                        Name = plan.Name,
+                        Name = planResult.Component.Name,
                         Success = planResult.Success,
-                        DurationMs = planResult.TestPlanResults.FirstOrDefault()?.DurationMs ?? 0,
-                        AssertionsPassed = planResult.TestPlanResults.Sum(r => r.AssertionResults.Count(a => a.Passed)),
-                        AssertionsFailed = planResult.TestPlanResults.Sum(r => r.AssertionResults.Count(a => !a.Passed)),
-                        ErrorMessage = planResult.TestPlanResults.FirstOrDefault()?.Exception?.Message
+                        DurationMs = planResult.DurationMs,
+                        AssertionsPassed = planResult.AssertionResults.Count(a => a.Passed),
+                        AssertionsFailed = planResult.AssertionResults.Count(a => !a.Passed),
+                        ErrorMessage = planResult.Exception?.Message
                     };
                     result.TestPlanResults.Add(summary);
-
-                    if (!planResult.Success)
-                        hasFailure = true;
                 }
 
-                result.Success = !hasFailure;
+                result.Success = fullResult.Success;
+                result.RawExecutionData = fullResult;
 
-                // 4. Optionally include full execution history and reports
-                if (request.IncludeHistory)   // <-- reading from the request object
+                if (request.IncludeHistory)
                 {
-                    // Run the entire project again to get complete data (or you could aggregate)
-                    var fullRunner = new ProjectRunner(project) { EnvironmentName = request.EnvironmentName };
-                    var fullResult = await fullRunner.RunAsync();
-                    result.FullReportJUnit = new JUnitFormatter().Format(fullResult);
-                    result.FullReportHtml = new HtmlFormatter().Format(fullResult);
-                    result.RawExecutionData = fullResult;
+                    result.FullReportJUnit = new Reporting.JUnitFormatter().Format(fullResult);
+                    result.FullReportHtml = new Reporting.HtmlFormatter().Format(fullResult);
                 }
             }
             catch (Exception ex)

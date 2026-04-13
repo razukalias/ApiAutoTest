@@ -1,0 +1,524 @@
+﻿{
+    "Name": "Demo Project - Core Features Test",
+    "ComponentType": "Project",
+    "Guid": "11111111-1111-1111-1111-111111111111",
+    "ScopedVariables": {},
+    "Assertions": [],
+    "BeforeExecute": null,
+    "AfterExecute": null,
+    "RetryPolicy": null,
+    "Environments": {
+        "Dev": {
+            "BASE_URL": "https://httpbin.org",
+            "API_URL": "https://jsonplaceholder.typicode.com"
+        }
+    },
+    "GlobalVariables": {
+        "global_counter": {
+            "Value": 0,
+            "IsMutable": true,
+            "IsSensitive": false
+        },
+        "global_api_key": {
+            "Value": "demo-api-key-12345",
+            "IsMutable": false,
+            "IsSensitive": true
+        }
+    },
+    "GlobalLogLevel": "ComponentExecution",
+    "DataRetentionDays": 7,
+    "Children": [
+        {
+            "Name": "TestPlan 1 - HTTP & Assertions",
+            "ComponentType": "TestPlan",
+            "Guid": "22222222-2222-2222-2222-222222222222",
+            "ScopedVariables": {
+                "plan_user_id": {
+                    "Value": null,
+                    "IsMutable": true,
+                    "IsSensitive": false
+                }
+            },
+            "Assertions": [],
+            "BeforeExecute": null,
+            "AfterExecute": null,
+            "RetryPolicy": null,
+            "Children": [
+                {
+                    "Name": "GET a user from JSONPlaceholder",
+                    "ComponentType": "Http",
+                    "Guid": "33333333-3333-3333-3333-333333333333",
+                    "Url": "${API_URL}/users/1",
+                    "Method": "GET",
+                    "Headers": {},
+                    "Cookies": {},
+                    "Body": null,
+                    "Timeout": "00:00:30",
+                    "Authentication": null,
+                    "Extractions": [
+                        {
+                            "Source": "$.id",
+                            "TargetVariable": "plan_user_id",
+                            "Type": "JsonPath"
+                        },
+                        {
+                            "Source": "$.name",
+                            "TargetVariable": "user_name",
+                            "Type": "JsonPath"
+                        }
+                    ],
+                    "ScopedVariables": {},
+                    "Assertions": [
+                        {
+                            "AssertionType": "Direct",
+                            "Behavior": "Fatal",
+                            "Path": "$.id",
+                            "Operator": "Equals",
+                            "ExpectedValue": 1
+                        },
+                        {
+                            "AssertionType": "Direct",
+                            "Behavior": "Assert",
+                            "Path": "$.email",
+                            "Operator": "Contains",
+                            "ExpectedValue": "@"
+                        }
+                    ],
+                    "BeforeExecute": null,
+                    "AfterExecute": null,
+                    "RetryPolicy": {
+                        "MaxAttempts": 2,
+                        "BackoffMs": 500,
+                        "ExponentialBackoff": false,
+                        "RetryOn": [ "StatusCode:500-599" ]
+                    }
+                },
+                {
+                    "Name": "POST to httpbin with JSON body",
+                    "ComponentType": "Http",
+                    "Guid": "44444444-4444-4444-4444-444444444444",
+                    "Url": "${BASE_URL}/post",
+                    "Method": "POST",
+                    "Headers": {
+                        "Content-Type": "application/json",
+                        "X-API-Key": "${global_api_key}"
+                    },
+                    "Cookies": {},
+                    "Body": {
+                        "user_id": "${plan_user_id}",
+                        "message": "Hello from test engine"
+                    },
+                    "Timeout": "00:00:30",
+                    "Authentication": null,
+                    "Extractions": [
+                        {
+                            "Source": "$.json.user_id",
+                            "TargetVariable": "echoed_user_id",
+                            "Type": "JsonPath"
+                        }
+                    ],
+                    "ScopedVariables": {},
+                    "Assertions": [
+                        {
+                            "AssertionType": "Variable",
+                            "Behavior": "Assert",
+                            "Variable": "echoed_user_id",
+                            "Operator": "Equals",
+                            "ExpectedValue": 1
+                        }
+                    ],
+                    "BeforeExecute": null,
+                    "AfterExecute": null,
+                    "RetryPolicy": null
+                }
+            ]
+        },
+        {
+            "Name": "TestPlan 2 - GraphQL & Authentication",
+            "ComponentType": "TestPlan",
+            "Guid": "55555555-5555-5555-5555-555555555555",
+            "ScopedVariables": {},
+            "Assertions": [],
+            "BeforeExecute": null,
+            "AfterExecute": null,
+            "RetryPolicy": null,
+            "Children": [
+                {
+                    "Name": "Public GraphQL - Rick and Morty API",
+                    "ComponentType": "GraphQL",
+                    "Guid": "66666666-6666-6666-6666-666666666666",
+                    "Url": "https://rickandmortyapi.com/graphql",
+                    "Query": "query { character(id: 1) { name status } }",
+                    "Mutation": null,
+                    "Variables": null,
+                    "Headers": {},
+                    "Authentication": null,
+                    "Extractions": [
+                        {
+                            "Source": "$.data.character.name",
+                            "TargetVariable": "character_name",
+                            "Type": "JsonPath"
+                        }
+                    ],
+                    "ScopedVariables": {},
+                    "Assertions": [
+                        {
+                            "AssertionType": "Direct",
+                            "Behavior": "Fatal",
+                            "Path": "$.data.character.name",
+                            "Operator": "Equals",
+                            "ExpectedValue": "Rick Sanchez"
+                        }
+                    ],
+                    "BeforeExecute": null,
+                    "AfterExecute": null,
+                    "RetryPolicy": null
+                },
+                {
+                    "Name": "HTTP with Bearer Token (mock)",
+                    "ComponentType": "Http",
+                    "Guid": "77777777-7777-7777-7777-777777777777",
+                    "Url": "${BASE_URL}/bearer",
+                    "Method": "GET",
+                    "Headers": {},
+                    "Cookies": {},
+                    "Body": null,
+                    "Timeout": "00:00:30",
+                    "Authentication": {
+                        "Type": "BearerToken",
+                        "Token": "fake-jwt-token-for-demo"
+                    },
+                    "Extractions": [],
+                    "ScopedVariables": {},
+                    "Assertions": [
+                        {
+                            "AssertionType": "Direct",
+                            "Behavior": "Warning",
+                            "Path": "$.authenticated",
+                            "Operator": "Equals",
+                            "ExpectedValue": true
+                        }
+                    ],
+                    "BeforeExecute": null,
+                    "AfterExecute": null,
+                    "RetryPolicy": null
+                }
+            ]
+        },
+        {
+            "Name": "TestPlan 3 - Control Flow & Loops",
+            "ComponentType": "TestPlan",
+            "Guid": "88888888-8888-8888-8888-888888888888",
+            "ScopedVariables": {},
+            "Assertions": [],
+            "BeforeExecute": null,
+            "AfterExecute": null,
+            "RetryPolicy": null,
+            "Children": [
+                {
+                    "Name": "Loop 3 times with index",
+                    "ComponentType": "Loop",
+                    "Guid": "99999999-9999-9999-9999-999999999999",
+                    "Start": 1,
+                    "End": 3,
+                    "Step": 1,
+                    "ScopedVariables": {},
+                    "Assertions": [],
+                    "BeforeExecute": null,
+                    "AfterExecute": null,
+                    "RetryPolicy": null,
+                    "Children": [
+                        {
+                            "Name": "Increment global counter",
+                            "ComponentType": "Script",
+                            "Guid": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+                            "ScriptBody": "Context.SetVariable(\"global_counter\", (int)(Context.GetVariable(\"global_counter\") ?? 0) + 1);",
+                            "ScopedVariables": {},
+                            "Assertions": [],
+                            "BeforeExecute": null,
+                            "AfterExecute": null,
+                            "RetryPolicy": null
+                        }
+                    ]
+                },
+                {
+                    "Name": "If condition using variable",
+                    "ComponentType": "If",
+                    "Guid": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+                    "Condition": "global_counter == 3",
+                    "ScopedVariables": {},
+                    "Assertions": [],
+                    "BeforeExecute": null,
+                    "AfterExecute": null,
+                    "RetryPolicy": null,
+                    "Children": [
+                        {
+                            "Name": "Log success",
+                            "ComponentType": "Script",
+                            "Guid": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+                            "ScriptBody": "Context.Log(LogLevel.Summary, \"Loop completed 3 times successfully.\");",
+                            "ScopedVariables": {},
+                            "Assertions": [],
+                            "BeforeExecute": null,
+                            "AfterExecute": null,
+                            "RetryPolicy": null
+                        }
+                    ]
+                },
+                {
+                    "Name": "Foreach over array",
+                    "ComponentType": "Foreach",
+                    "Guid": "dddddddd-dddd-dddd-dddd-dddddddddddd",
+                    "SourceDataPayload": [ "apple", "banana", "cherry" ],
+                    "ItemVariableName": "fruit",
+                    "ScopedVariables": {},
+                    "Assertions": [],
+                    "BeforeExecute": null,
+                    "AfterExecute": null,
+                    "RetryPolicy": null,
+                    "Children": [
+                        {
+                            "Name": "Echo fruit",
+                            "ComponentType": "Script",
+                            "Guid": "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+                            "ScriptBody": "System.Console.WriteLine($\"Fruit: {Context.GetVariable(\"fruit\")}\");",
+                            "ScopedVariables": {},
+                            "Assertions": [],
+                            "BeforeExecute": null,
+                            "AfterExecute": null,
+                            "RetryPolicy": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Name": "TestPlan 4 - FileSystem & Convert",
+            "ComponentType": "TestPlan",
+            "Guid": "ffffffff-ffff-ffff-ffff-ffffffffffff",
+            "ScopedVariables": {
+                "temp_dir": {
+                    "Value": "TestAutomationTemp",
+                    "IsMutable": false,
+                    "IsSensitive": false
+                }
+            },
+            "Assertions": [],
+            "BeforeExecute": null,
+            "AfterExecute": null,
+            "RetryPolicy": null,
+            "Children": [
+                {
+                    "Name": "Create temp directory",
+                    "ComponentType": "FileSystem",
+                    "Guid": "11111111-2222-3333-4444-555555555555",
+                    "Action": "CreateDirectory",
+                    "Path": "./${temp_dir}",
+                    "Content": null,
+                    "TargetVariable": null,
+                    "ScopedVariables": {},
+                    "Assertions": [],
+                    "BeforeExecute": null,
+                    "AfterExecute": null,
+                    "RetryPolicy": null
+                },
+                {
+                    "Name": "Write text file",
+                    "ComponentType": "FileSystem",
+                    "Guid": "22222222-3333-4444-5555-666666666666",
+                    "Action": "WriteText",
+                    "Path": "./${temp_dir}/sample.txt",
+                    "Content": "Hello, world!",
+                    "TargetVariable": null,
+                    "ScopedVariables": {},
+                    "Assertions": [],
+                    "BeforeExecute": null,
+                    "AfterExecute": null,
+                    "RetryPolicy": null
+                },
+                {
+                    "Name": "Read text file",
+                    "ComponentType": "FileSystem",
+                    "Guid": "33333333-4444-5555-6666-777777777777",
+                    "Action": "ReadText",
+                    "Path": "./${temp_dir}/sample.txt",
+                    "Content": null,
+                    "TargetVariable": "file_content",
+                    "ScopedVariables": {},
+                    "Assertions": [
+                        {
+                            "AssertionType": "Variable",
+                            "Behavior": "Assert",
+                            "Variable": "file_content",
+                            "Operator": "Equals",
+                            "ExpectedValue": "Hello, world!"
+                        }
+                    ],
+                    "BeforeExecute": null,
+                    "AfterExecute": null,
+                    "RetryPolicy": null
+                },
+                {
+                    "Name": "Convert to Base64",
+                    "ComponentType": "Convert",
+                    "Guid": "44444444-5555-6666-7777-888888888888",
+                    "Operation": "Base64Encode",
+                    "Input": "${file_content}",
+                    "TargetVariable": "encoded_content",
+                    "ScopedVariables": {},
+                    "Assertions": [],
+                    "BeforeExecute": null,
+                    "AfterExecute": null,
+                    "RetryPolicy": null
+                },
+                {
+                    "Name": "Decode Base64 and verify",
+                    "ComponentType": "Convert",
+                    "Guid": "55555555-6666-7777-8888-999999999999",
+                    "Operation": "Base64Decode",
+                    "Input": "${encoded_content}",
+                    "TargetVariable": "decoded_content",
+                    "ScopedVariables": {},
+                    "Assertions": [
+                        {
+                            "AssertionType": "Variable",
+                            "Behavior": "Fatal",
+                            "Variable": "decoded_content",
+                            "Operator": "Equals",
+                            "ExpectedValue": "Hello, world!"
+                        }
+                    ],
+                    "BeforeExecute": null,
+                    "AfterExecute": null,
+                    "RetryPolicy": null
+                },
+                {
+                    "Name": "Cleanup - Delete temp directory",
+                    "ComponentType": "FileSystem",
+                    "Guid": "66666666-7777-8888-9999-aaaaaaaaaaaa",
+                    "Action": "DeleteDirectory",
+                    "Path": "./${temp_dir}",
+                    "Content": null,
+                    "TargetVariable": null,
+                    "ScopedVariables": {},
+                    "Assertions": [],
+                    "BeforeExecute": null,
+                    "AfterExecute": null,
+                    "RetryPolicy": null
+                }
+            ]
+        },
+        {
+            "Name": "TestPlan 5 - Timer & Thread (Concurrency)",
+            "ComponentType": "TestPlan",
+            "Guid": "77777777-8888-9999-aaaa-bbbbbbbbbbbb",
+            "ScopedVariables": {},
+            "Assertions": [],
+            "BeforeExecute": null,
+            "AfterExecute": null,
+            "RetryPolicy": null,
+            "Children": [
+                {
+                    "Name": "Timer around delay script",
+                    "ComponentType": "Timer",
+                    "Guid": "88888888-9999-aaaa-bbbb-cccccccccccc",
+                    "ScopedVariables": {},
+                    "Assertions": [],
+                    "BeforeExecute": null,
+                    "AfterExecute": null,
+                    "RetryPolicy": null,
+                    "Children": [
+                        {
+                            "Name": "Wait 500ms",
+                            "ComponentType": "Script",
+                            "Guid": "99999999-aaaa-bbbb-cccc-dddddddddddd",
+                            "ScriptBody": "System.Threading.Thread.Sleep(500);",
+                            "ScopedVariables": {},
+                            "Assertions": [],
+                            "BeforeExecute": null,
+                            "AfterExecute": null,
+                            "RetryPolicy": null
+                        }
+                    ]
+                },
+                {
+                    "Name": "Parallel HTTP requests",
+                    "ComponentType": "Thread",
+                    "Guid": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+                    "ThreadCount": 3,
+                    "ScopedVariables": {},
+                    "Assertions": [],
+                    "BeforeExecute": null,
+                    "AfterExecute": null,
+                    "RetryPolicy": null,
+                    "Children": [
+                        {
+                            "Name": "GET delay endpoint (simulates work)",
+                            "ComponentType": "Http",
+                            "Guid": "bbbbbbbb-cccc-dddd-eeee-ffffffffffff",
+                            "Url": "${BASE_URL}/delay/0.5",
+                            "Method": "GET",
+                            "Headers": {},
+                            "Cookies": {},
+                            "Body": null,
+                            "Timeout": "00:00:10",
+                            "Authentication": null,
+                            "Extractions": [],
+                            "ScopedVariables": {},
+                            "Assertions": [
+                                {
+                                    "AssertionType": "Direct",
+                                    "Behavior": "Assert",
+                                    "Path": "$.url",
+                                    "Operator": "Contains",
+                                    "ExpectedValue": "/delay"
+                                }
+                            ],
+                            "BeforeExecute": null,
+                            "AfterExecute": null,
+                            "RetryPolicy": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Name": "TestPlan 6 - DataSet",
+            "ComponentType": "TestPlan",
+            "Guid": "cccccccc-dddd-eeee-ffff-000000000000",
+            "ScopedVariables": {},
+            "Assertions": [],
+            "BeforeExecute": null,
+            "AfterExecute": null,
+            "RetryPolicy": null,
+            "Children": [
+                {
+                    "Name": "Inline DataSet",
+                    "ComponentType": "DataSet",
+                    "Guid": "dddddddd-eeee-ffff-0000-111111111111",
+                    "Source": "Inline",
+                    "InlineData": [
+                        {
+                            "id": 1,
+                            "name": "Alice"
+                        },
+                        {
+                            "id": 2,
+                            "name": "Bob"
+                        }
+                    ],
+                    "FilePath": null,
+                    "Options": {
+                        "HasHeader": true,
+                        "SheetName": null
+                    },
+                    "ScopedVariables": {},
+                    "Assertions": [],
+                    "BeforeExecute": null,
+                    "AfterExecute": null,
+                    "RetryPolicy": null
+                }
+            ]
+        }
+    ]
+}

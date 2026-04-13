@@ -2,7 +2,6 @@
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-
 namespace TestAutomationEngine.Core
 {
     public class DirectAssertion : IAssertion
@@ -15,7 +14,7 @@ namespace TestAutomationEngine.Core
         public async Task<AssertionResult> AssertAsync(ComponentResult result, ExecutionContext context)
         {
             var actual = JsonPathEvaluator.Evaluate(result.Output, Path);
-            bool passed = Evaluate(actual, Operator, ExpectedValue);
+            bool passed = EvaluateOperator(actual, Operator, ExpectedValue);
             return new AssertionResult
             {
                 Passed = passed,
@@ -26,7 +25,8 @@ namespace TestAutomationEngine.Core
             };
         }
 
-        private bool Evaluate(object? actual, Operator op, object? expected)
+        /// <summary>Shared evaluation logic, also used by VariableAssertion.</summary>
+        internal static bool EvaluateOperator(object? actual, Operator op, object? expected)
         {
             return op switch
             {
@@ -42,7 +42,7 @@ namespace TestAutomationEngine.Core
             };
         }
 
-        private int Compare(object? a, object? b)
+        private static int Compare(object? a, object? b)
         {
             if (a is IComparable ca && b is IComparable cb)
                 return ca.CompareTo(cb);
