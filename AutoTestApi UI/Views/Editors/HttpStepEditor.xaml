@@ -1,0 +1,47 @@
+﻿<UserControl x:Class="TestAutomation.UI.Wpf.Views.Editors.HttpStepEditor"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:helpers="clr-namespace:TestAutomation.UI.Wpf.Helpers">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Name -->
+        <StackPanel>
+            <TextBlock Text="Name:" FontWeight="Bold"/>
+            <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10"/>
+        </StackPanel>
+
+        <!-- Method & URL -->
+        <Grid Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <ComboBox Grid.Column="0" ItemsSource="{x:Static helpers:HttpMethodHelper.SupportedMethods}" 
+                      SelectedItem="{Binding Method}" DisplayMemberPath="Method" Margin="0,0,5,0"/>
+            <TextBox Grid.Column="1" Text="{Binding Url, UpdateSourceTrigger=PropertyChanged}"/>
+        </Grid>
+
+        <!-- Headers -->
+        <GroupBox Header="Headers" Grid.Row="2" Margin="0,0,0,10">
+            <DataGrid ItemsSource="{Binding Headers}" AutoGenerateColumns="False" CanUserAddRows="True" HeadersVisibility="Column">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Key" Binding="{Binding Key}" Width="*"/>
+                    <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="2*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </GroupBox>
+
+        <!-- Body -->
+        <GroupBox Header="Body" Grid.Row="3">
+            <TextBox Text="{Binding BodyString, UpdateSourceTrigger=PropertyChanged}" 
+                     AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                     FontFamily="Consolas"/>
+        </GroupBox>
+    </Grid>
+</UserControl>

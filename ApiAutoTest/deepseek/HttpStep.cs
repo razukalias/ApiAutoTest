@@ -19,7 +19,12 @@ namespace TestAutomationEngine.Core
         public List<ExtractionRule> Extractions { get; set; } = new();
 
         public override string ComponentType => "Http";
-
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string BodyString
+        {
+            get => Body?.ToString() ?? string.Empty;
+            set => Body = value;
+        }
         protected override async Task<ComponentResult> ExecuteCoreAsync(ExecutionContext context)
         {
             var resolvedUrl = VariableResolver.Resolve(Url, context);

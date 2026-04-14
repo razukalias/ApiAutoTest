@@ -10,17 +10,16 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 namespace AutoTestApi_UI
 {
     /// <summary>
-    /// Interaction logic for UserControl1.xaml
+    /// Interaction logic for Window1.xaml
     /// </summary>
-    public partial class UserControl1 : UserControl
+    public partial class Window1 : Window
     {
-        public UserControl1()
+        public Window1()
         {
             InitializeComponent();
         }
