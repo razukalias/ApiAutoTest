@@ -9,17 +9,19 @@
         xmlns:editors="clr-namespace:TestAutomation.UI.Wpf.Views.Editors"
         mc:Ignorable="d"
         Title="Test Automation Studio" Height="900" Width="1400"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        d:DataContext="{d:DesignInstance Type=vm:MainViewModel, IsDesignTimeCreatable=True}">
 
     <Window.DataContext>
         <vm:MainViewModel />
     </Window.DataContext>
 
     <Window.Resources>
+        <!-- Template Selector for Component Editors -->
         <views:ComponentEditorTemplateSelector x:Key="EditorTemplateSelector">
             <views:ComponentEditorTemplateSelector.HttpTemplate>
-                <DataTemplate DataType="{x:Type core:HttpStep}">
-                    <editors:HttpStepEditor/>
+                <DataTemplate>
+                    <editors:HttpStepEditor />
                 </DataTemplate>
             </views:ComponentEditorTemplateSelector.HttpTemplate>
             <views:ComponentEditorTemplateSelector.DefaultTemplate>
@@ -34,12 +36,16 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <!-- Toolbar -->
             <RowDefinition Height="*"/>
+            <!-- Main content -->
+            <RowDefinition Height="200"/>
+            <!-- Output panel -->
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="200" MinHeight="100"/>
-            <RowDefinition Height="Auto"/>
+            <!-- Status bar -->
         </Grid.RowDefinitions>
 
+        <!-- Toolbar -->
         <ToolBar Grid.Row="0">
             <Button Content="Load" Command="{Binding LoadProjectCommand}" />
             <Button Content="Save" Command="{Binding SaveProjectCommand}" />
@@ -54,6 +60,7 @@
             <CheckBox Content="Run All" IsChecked="{Binding RunAllTestPlans}" VerticalAlignment="Center"/>
         </ToolBar>
 
+        <!-- Main Split View -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="300" MinWidth="200"/>
@@ -61,39 +68,42 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
+            <!-- Project Explorer TreeView -->
             <GroupBox Header="Project Explorer" Grid.Column="0" Margin="5">
-                <TreeView ItemsSource="{Binding Project.Children}" x:Name="ProjectTree" 
+                <TreeView ItemsSource="{Binding Project.Children}" 
+                          x:Name="ProjectTree"
                           SelectedItemChanged="ProjectTree_SelectedItemChanged">
                     <TreeView.Resources>
+                        <!-- TestPlan Template -->
                         <HierarchicalDataTemplate DataType="{x:Type core:TestPlan}" ItemsSource="{Binding Children}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="📋 " FontFamily="Segoe UI"/>
                                 <TextBlock Text="{Binding Name}"/>
                             </StackPanel>
                         </HierarchicalDataTemplate>
-
+                        <!-- HttpStep Template -->
                         <DataTemplate DataType="{x:Type core:HttpStep}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="🌐 " FontFamily="Segoe UI"/>
                                 <TextBlock Text="{Binding Name}"/>
                             </StackPanel>
                         </DataTemplate>
-
+                        <!-- GraphQLStep Template -->
                         <DataTemplate DataType="{x:Type core:GraphQLStep}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="📊 " FontFamily="Segoe UI"/>
                                 <TextBlock Text="{Binding Name}"/>
                             </StackPanel>
                         </DataTemplate>
-
+                        <!-- Loop Template (Container) -->
                         <HierarchicalDataTemplate DataType="{x:Type core:Loop}" ItemsSource="{Binding Children}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="🔁 " FontFamily="Segoe UI"/>
                                 <TextBlock Text="{Binding Name}"/>
                             </StackPanel>
                         </HierarchicalDataTemplate>
+                        <!-- Add more templates as needed (If, While, Foreach, etc.) -->
                     </TreeView.Resources>
-
                     <TreeView.ItemContainerStyle>
                         <Style TargetType="TreeViewItem">
                             <Setter Property="IsExpanded" Value="True"/>
@@ -102,30 +112,26 @@
                 </TreeView>
             </GroupBox>
 
-            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Center" VerticalAlignment="Stretch" Background="#EEE"/>
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch"/>
 
+            <!-- Component Editor Panel -->
             <GroupBox Header="Component Editor" Grid.Column="2" Margin="5">
                 <ContentControl Content="{Binding SelectedComponent}" 
                                 ContentTemplateSelector="{StaticResource EditorTemplateSelector}"/>
             </GroupBox>
         </Grid>
 
-        <GridSplitter Grid.Row="2" Height="5" HorizontalAlignment="Stretch" VerticalAlignment="Center" Background="#EEE"/>
-
-        <GroupBox Header="Output" Grid.Row="3" Margin="5">
-            <ListBox ItemsSource="{Binding OutputMessages}" Background="Black" Foreground="LightGray"
-                     FontFamily="Consolas" FontSize="12">
-            </ListBox>
+        <!-- Output Panel -->
+        <GroupBox Header="Output" Grid.Row="2" Margin="5">
+            <ListBox ItemsSource="{Binding OutputMessages}" 
+                     Background="Black" Foreground="LightGray"
+                     FontFamily="Consolas" FontSize="12"/>
         </GroupBox>
 
-        <StatusBar Grid.Row="4">
+        <!-- Status Bar -->
+        <StatusBar Grid.Row="3">
             <StatusBarItem>
                 <TextBlock Text="{Binding StatusMessage}"/>
-            </StatusBarItem>
-            <Separator/>
-            <StatusBarItem HorizontalAlignment="Right">
-                <ProgressBar IsIndeterminate="{Binding IsRunning}" Width="100" Height="15" 
-                             Visibility="{Binding IsRunning, Converter={StaticResource BooleanToVisibilityConverter}}"/>
             </StatusBarItem>
         </StatusBar>
     </Grid>
