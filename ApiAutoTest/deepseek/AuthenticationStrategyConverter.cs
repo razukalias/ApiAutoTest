@@ -23,6 +23,23 @@ public class AuthenticationStrategyConverter : JsonConverter<IAuthenticationStra
 
     public override void Write(Utf8JsonWriter writer, IAuthenticationStrategy value, JsonSerializerOptions options)
     {
-        JsonSerializer.Serialize(writer, (object)value, options);
+        writer.WriteStartObject();
+        writer.WriteString("Type", value switch
+        {
+            OAuth2ClientCredentials => "OAuth2ClientCredentials",
+            ApiKeyStrategy => "ApiKey",
+            BearerTokenStrategy => "BearerToken",
+            WindowsIntegratedStrategy => "WindowsIntegrated",
+            _ => throw new NotSupportedException()
+        });
+
+        var json = JsonSerializer.Serialize(value, value.GetType(), options);
+        using var doc = JsonDocument.Parse(json);
+        foreach (var prop in doc.RootElement.EnumerateObject())
+        {
+            if (prop.Name != "Type")
+                prop.WriteTo(writer);
+        }
+        writer.WriteEndObject();
     }
 }

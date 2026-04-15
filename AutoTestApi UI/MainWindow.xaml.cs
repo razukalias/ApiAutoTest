@@ -21,4 +21,5 @@ public partial class MainWindow : Window
             System.Diagnostics.Debug.WriteLine($"Selected: {vm.SelectedComponent?.Name}");
         }
     }
+
 }

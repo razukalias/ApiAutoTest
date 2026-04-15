@@ -21,16 +21,15 @@ public class AssertionConverter : JsonConverter<IAssertion>
 
     public override void Write(Utf8JsonWriter writer, IAssertion value, JsonSerializerOptions options)
     {
-        // Add a discriminator property before serializing
-        string assertionType = value switch
+        writer.WriteStartObject();
+        writer.WriteString("AssertionType", value switch
         {
             DirectAssertion => "Direct",
             VariableAssertion => "Variable",
             _ => throw new NotSupportedException()
-        };
-        writer.WriteStartObject();
-        writer.WriteString("AssertionType", assertionType);
-        // Serialize the actual object's properties
+        });
+
+        // Serialize the object and copy all properties except the discriminator
         var json = JsonSerializer.Serialize(value, value.GetType(), options);
         using var doc = JsonDocument.Parse(json);
         foreach (var prop in doc.RootElement.EnumerateObject())

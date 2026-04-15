@@ -47,13 +47,26 @@
 
         <!-- Toolbar -->
         <ToolBar Grid.Row="0">
+            <!-- Existing Load/Save/Run/Stop buttons -->
             <Button Content="Load" Command="{Binding LoadProjectCommand}" />
             <Button Content="Save" Command="{Binding SaveProjectCommand}" />
             <Separator/>
-            <Button Content="Run" Command="{Binding RunProjectCommand}" 
-                    IsEnabled="{Binding IsProjectLoaded}" Background="Green" Foreground="White"/>
-            <Button Content="Stop" Command="{Binding StopRunCommand}" 
-                    IsEnabled="{Binding IsRunning}" Background="Red" Foreground="White"/>
+            <Button Content="Run" Command="{Binding RunProjectCommand}" IsEnabled="{Binding IsProjectLoaded}" Background="Green" Foreground="White"/>
+            <Button Content="Stop" Command="{Binding StopRunCommand}" IsEnabled="{Binding IsRunning}" Background="Red" Foreground="White"/>
+            <Separator/>
+            <Button Content="Add TestPlan" Command="{Binding AddTestPlanCommand}" IsEnabled="{Binding IsProjectLoaded}"/>
+            <Menu>
+                <MenuItem Header="Add Step">
+                    <MenuItem Header="HTTP Request" Command="{Binding AddComponentCommand}" CommandParameter="HttpStep"/>
+                    <MenuItem Header="GraphQL Query" Command="{Binding AddComponentCommand}" CommandParameter="GraphQLStep"/>
+                    <MenuItem Header="Loop" Command="{Binding AddComponentCommand}" CommandParameter="Loop"/>
+                    <MenuItem Header="If Condition" Command="{Binding AddComponentCommand}" CommandParameter="If"/>
+                    <MenuItem Header="While Loop" Command="{Binding AddComponentCommand}" CommandParameter="While"/>
+                    <MenuItem Header="Script" Command="{Binding AddComponentCommand}" CommandParameter="ScriptStep"/>
+                </MenuItem>
+            </Menu>
+            <Button Content="Delete" Command="{Binding DeleteSelectedComponentCommand}" IsEnabled="{Binding IsProjectLoaded}"/>
+            <Separator/>
             <Separator/>
             <TextBlock Text="Environment:" VerticalAlignment="Center" Margin="5,0,2,0"/>
             <TextBox Text="{Binding Environment, UpdateSourceTrigger=PropertyChanged}" Width="80" Margin="0,0,10,0"/>
@@ -70,10 +83,16 @@
 
             <!-- Project Explorer TreeView -->
             <GroupBox Header="Project Explorer" Grid.Column="0" Margin="5">
-                <TreeView ItemsSource="{Binding Project.Children}" 
+                <TreeView ItemsSource="{Binding ProjectRootCollection}" 
                           x:Name="ProjectTree"
                           SelectedItemChanged="ProjectTree_SelectedItemChanged">
                     <TreeView.Resources>
+                        <HierarchicalDataTemplate DataType="{x:Type core:Project}" ItemsSource="{Binding Children}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📁 " FontFamily="Segoe UI"/>
+                                <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
+                            </StackPanel>
+                        </HierarchicalDataTemplate>
                         <!-- TestPlan Template -->
                         <HierarchicalDataTemplate DataType="{x:Type core:TestPlan}" ItemsSource="{Binding Children}">
                             <StackPanel Orientation="Horizontal">
@@ -107,6 +126,22 @@
                     <TreeView.ItemContainerStyle>
                         <Style TargetType="TreeViewItem">
                             <Setter Property="IsExpanded" Value="True"/>
+                            <Setter Property="ContextMenu">
+                                <Setter.Value>
+                                    <ContextMenu>
+                                        <MenuItem Header="Add TestPlan" Command="{Binding DataContext.AddTestPlanCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                                        <Separator/>
+                                        <MenuItem Header="Add HTTP Step" Command="{Binding DataContext.AddComponentCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="HttpStep"/>
+                                        <MenuItem Header="Add GraphQL Step" Command="{Binding DataContext.AddComponentCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="GraphQLStep"/>
+                                        <MenuItem Header="Add Loop" Command="{Binding DataContext.AddComponentCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="Loop"/>
+                                        <MenuItem Header="Add If" Command="{Binding DataContext.AddComponentCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="If"/>
+                                        <MenuItem Header="Add While" Command="{Binding DataContext.AddComponentCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="While"/>
+                                        <MenuItem Header="Add Script" Command="{Binding DataContext.AddComponentCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="ScriptStep"/>
+                                        <Separator/>
+                                        <MenuItem Header="Delete" Command="{Binding DataContext.DeleteSelectedComponentCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                                    </ContextMenu>
+                                </Setter.Value>
+                            </Setter>
                         </Style>
                     </TreeView.ItemContainerStyle>
                 </TreeView>
