@@ -107,24 +107,6 @@
           "BeforeExecute": null,
           "AfterExecute": null,
           "RetryPolicy": null
-        },
-        {
-          "Url": "",
-          "Method": "GET",
-          "Headers": {},
-          "Cookies": {},
-          "Body": null,
-          "Timeout": "00:00:30",
-          "Authentication": null,
-          "Extractions": [],
-          "ComponentType": "Http",
-          "Name": "New HTTP Request",
-          "Guid": "7ea8a9f4-df6b-4025-b130-a75ab42c6312",
-          "ScopedVariables": {},
-          "Assertions": [],
-          "BeforeExecute": null,
-          "AfterExecute": null,
-          "RetryPolicy": null
         }
       ],
       "Name": "TestPlan 1 - HTTP \u0026 Assertions",

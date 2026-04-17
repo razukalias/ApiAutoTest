@@ -12,19 +12,19 @@ namespace TestAutomation.UI.Wpf.ViewModels
 
     public partial class MainViewModel : ObservableObject
     {
-        [ObservableProperty] private Project? _project;
-        [ObservableProperty] private ObservableCollection<Project> _projectRootCollection = new();
-        [ObservableProperty] private ITestComponent? _selectedComponent;
+        [ObservableProperty] public Project? _project;
+        [ObservableProperty] public ObservableCollection<Project> _projectRootCollection = new();
+        [ObservableProperty] public ITestComponent? _selectedComponent;
       
-        [ObservableProperty] private string _projectFilePath = "";
-        [ObservableProperty] private string _environment = "Dev";
-        [ObservableProperty] private bool _runAllTestPlans = true;
-        [ObservableProperty] private string _statusMessage = "Ready";
-        [ObservableProperty] private bool _isRunning;
-        [ObservableProperty] private bool _isProjectLoaded;
-        [ObservableProperty] private ObservableCollection<string> _outputMessages = new();
+        [ObservableProperty] public string _projectFilePath = "";
+        [ObservableProperty] public string _environment = "Dev";
+        [ObservableProperty] public bool _runAllTestPlans = true;
+        [ObservableProperty] public string _statusMessage = "Ready";
+        [ObservableProperty] public bool _isRunning;
+        [ObservableProperty] public bool _isProjectLoaded;
+        [ObservableProperty] public ObservableCollection<string> _outputMessages = new();
      
-        private CancellationTokenSource? _cts;
+        public CancellationTokenSource? _cts;
        
 
         partial void OnProjectChanged(Project? value)
@@ -37,7 +37,7 @@ namespace TestAutomation.UI.Wpf.ViewModels
      
 
         [RelayCommand]
-        private async Task LoadProject()
+        public async Task LoadProject()
         {
             var dialog = new Microsoft.Win32.OpenFileDialog
             {
@@ -61,7 +61,7 @@ namespace TestAutomation.UI.Wpf.ViewModels
         }
 
         [RelayCommand]
-        private async Task SaveProject()
+        public async Task SaveProject()
         {
             if (Project == null) return;
             var dialog = new Microsoft.Win32.SaveFileDialog
@@ -76,7 +76,7 @@ namespace TestAutomation.UI.Wpf.ViewModels
         }
 
         [RelayCommand]
-        private async Task RunProject()
+        public async Task RunProject()
         {
             if (Project == null) return;
             _cts = new CancellationTokenSource();
@@ -120,23 +120,25 @@ namespace TestAutomation.UI.Wpf.ViewModels
         }
 
         [RelayCommand]
-        private void StopRun()
+        public void StopRun()
         {
             _cts?.Cancel();
         }
-        [RelayCommand]
-        private void AddTestPlan()
+        [RelayCommand]      
+        public void AddTestPlan()
         {
             if (Project == null) return;
+
             var newPlan = new TestPlan { Name = "New TestPlan" };
             Project.Children.Add(newPlan);
-            OnPropertyChanged(nameof(Project)); // Refresh tree
+
+            RefreshTreeView();
             SelectedComponent = newPlan;
             StatusMessage = "Added new TestPlan";
         }
 
         [RelayCommand]
-        private void AddComponent(string componentType)
+        public void AddComponent(string componentType)
         {
             if (SelectedComponent == null)
             {
@@ -156,19 +158,21 @@ namespace TestAutomation.UI.Wpf.ViewModels
                 return;
             }
 
-         
 
             if (container is ContainerComponentBase mutableContainer)
             {
                 ITestComponent newComponent = CreateComponent(componentType);
                 mutableContainer.Children.Add(newComponent);
-                OnPropertyChanged(nameof(Project));
-                OnPropertyChanged(nameof(ProjectRootCollection));
+
+                // Force TreeView refresh
+                RefreshTreeView();
+
                 SelectedComponent = newComponent;
                 StatusMessage = $"Added {componentType}";
             }
+
         }
-        private ITestComponent CreateComponent(string type) => type switch
+        public ITestComponent CreateComponent(string type) => type switch
         {
             "HttpStep" => new HttpStep { Name = "New HTTP Request" },
             "GraphQLStep" => new GraphQLStep { Name = "New GraphQL Query" },
@@ -178,9 +182,10 @@ namespace TestAutomation.UI.Wpf.ViewModels
             "ScriptStep" => new ScriptStep { Name = "New Script" },
             _ => throw new ArgumentException($"Unknown component type: {type}")
         };
+     
 
         [RelayCommand]
-        private void DeleteSelectedComponent()
+        public void DeleteSelectedComponent()
         {
             if (SelectedComponent == null) return;
             if (SelectedComponent is Project)
@@ -195,7 +200,7 @@ namespace TestAutomation.UI.Wpf.ViewModels
             if (parent is ContainerComponentBase mutableParent)
             {
                 mutableParent.Children.Remove(component);
-                OnPropertyChanged(nameof(Project));
+                RefreshTreeView();
                 SelectedComponent = null;
                 StatusMessage = $"Deleted '{component.Name}'";
             }
@@ -204,8 +209,19 @@ namespace TestAutomation.UI.Wpf.ViewModels
                 MessageBox.Show("Parent container not found or not modifiable.", "Delete", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+    
+        public void RefreshTreeView()
+        {
+            // Recreate the root collection to trigger a full UI refresh
+            var temp = ProjectRootCollection.ToList();
+            ProjectRootCollection.Clear();
+            foreach (var item in temp)
+                ProjectRootCollection.Add(item);
 
-        private IContainerComponent? FindParentContainer(IContainerComponent root, ITestComponent? target)
+            // Also raise property changed for Project
+            OnPropertyChanged(nameof(Project));
+        }
+        public IContainerComponent? FindParentContainer(IContainerComponent root, ITestComponent? target)
         {
             if (target == null) return null;
             foreach (var child in root.Children)

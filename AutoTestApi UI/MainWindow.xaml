@@ -123,22 +123,37 @@
                         </HierarchicalDataTemplate>
                         <!-- Add more templates as needed (If, While, Foreach, etc.) -->
                     </TreeView.Resources>
+
                     <TreeView.ItemContainerStyle>
                         <Style TargetType="TreeViewItem">
                             <Setter Property="IsExpanded" Value="True"/>
                             <Setter Property="ContextMenu">
                                 <Setter.Value>
                                     <ContextMenu>
-                                        <MenuItem Header="Add TestPlan" Command="{Binding DataContext.AddTestPlanCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                                        <MenuItem Header="Add TestPlan" 
+                              Command="{Binding DataContext.AddTestPlanCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
                                         <Separator/>
-                                        <MenuItem Header="Add HTTP Step" Command="{Binding DataContext.AddComponentCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="HttpStep"/>
-                                        <MenuItem Header="Add GraphQL Step" Command="{Binding DataContext.AddComponentCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="GraphQLStep"/>
-                                        <MenuItem Header="Add Loop" Command="{Binding DataContext.AddComponentCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="Loop"/>
-                                        <MenuItem Header="Add If" Command="{Binding DataContext.AddComponentCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="If"/>
-                                        <MenuItem Header="Add While" Command="{Binding DataContext.AddComponentCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="While"/>
-                                        <MenuItem Header="Add Script" Command="{Binding DataContext.AddComponentCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="ScriptStep"/>
+                                        <MenuItem Header="Add HTTP Step" 
+                              Command="{Binding DataContext.AddComponentCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
+                              CommandParameter="HttpStep"/>
+                                        <MenuItem Header="Add GraphQL Step" 
+                              Command="{Binding DataContext.AddComponentCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
+                              CommandParameter="GraphQLStep"/>
+                                        <MenuItem Header="Add Loop" 
+                              Command="{Binding DataContext.AddComponentCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
+                              CommandParameter="Loop"/>
+                                        <MenuItem Header="Add If" 
+                              Command="{Binding DataContext.AddComponentCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
+                              CommandParameter="If"/>
+                                        <MenuItem Header="Add While" 
+                              Command="{Binding DataContext.AddComponentCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
+                              CommandParameter="While"/>
+                                        <MenuItem Header="Add Script" 
+                              Command="{Binding DataContext.AddComponentCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
+                              CommandParameter="ScriptStep"/>
                                         <Separator/>
-                                        <MenuItem Header="Delete" Command="{Binding DataContext.DeleteSelectedComponentCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                                        <MenuItem Header="Delete" 
+                              Command="{Binding DataContext.DeleteSelectedComponentCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
                                     </ContextMenu>
                                 </Setter.Value>
                             </Setter>
