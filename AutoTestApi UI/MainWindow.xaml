@@ -50,6 +50,8 @@
             <!-- Existing Load/Save/Run/Stop buttons -->
             <Button Content="Load" Command="{Binding LoadProjectCommand}" />
             <Button Content="Save" Command="{Binding SaveProjectCommand}" />
+            <Button Content="New" Command="{Binding NewProjectCommand}" />
+            <Button Content="Close" Command="{Binding CloseProjectCommand}" IsEnabled="{Binding IsProjectLoaded}" />
             <Separator/>
             <Button Content="Run" Command="{Binding RunProjectCommand}" IsEnabled="{Binding IsProjectLoaded}" Background="Green" Foreground="White"/>
             <Button Content="Stop" Command="{Binding StopRunCommand}" IsEnabled="{Binding IsRunning}" Background="Red" Foreground="White"/>

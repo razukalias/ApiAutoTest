@@ -25,7 +25,7 @@ namespace TestAutomation.UI.Wpf.ViewModels
         [ObservableProperty] public ObservableCollection<string> _outputMessages = new();
      
         public CancellationTokenSource? _cts;
-       
+        private string? _lastSavedSnapshot;
 
         partial void OnProjectChanged(Project? value)
         {
@@ -33,8 +33,9 @@ namespace TestAutomation.UI.Wpf.ViewModels
             ProjectRootCollection.Clear();
             if (value != null)
                 ProjectRootCollection.Add(value);
+            SelectedComponent = null;
         }
-     
+
 
         [RelayCommand]
         public async Task LoadProject()
@@ -49,7 +50,10 @@ namespace TestAutomation.UI.Wpf.ViewModels
                 try
                 {
                     var json = await File.ReadAllTextAsync(ProjectFilePath);
-                    Project = Project.FromJson(json);
+               
+                   Project = Project.FromJson(json);
+                    _lastSavedSnapshot = Project.ToJson();
+
                     StatusMessage = $"Loaded: {Project.Name}";
                     OutputMessages.Add($"Loaded project: {Project.Name}");
                 }
@@ -59,10 +63,69 @@ namespace TestAutomation.UI.Wpf.ViewModels
                 }
             }
         }
+        [RelayCommand]
+        private void NewProject()
+        {
+            // Create a new empty project
+            var newProject = new Project
+            {
+                Name = "New Project",
+                Guid = Guid.NewGuid()
+            };
+            // Optionally add a default environment
+            newProject.Environments["Dev"] = new Dictionary<string, object>();
+
+            Project = newProject;
+            OnProjectChanged(Project); // Will update ProjectRootCollection and IsProjectLoaded
+            StatusMessage = "Created new project";
+        }
+        private bool HasUnsavedChanges()
+        {
+            if (Project == null) return false;
+            var currentSnapshot = Project.ToJson();
+            return currentSnapshot != _lastSavedSnapshot;
+        }
+        [RelayCommand]
+        
+        private void CloseProject()
+        {
+            if (Project == null) return;
+
+            if (HasUnsavedChanges())
+            {
+                var result = MessageBox.Show(
+                    "You have unsaved changes. Do you want to save before closing?",
+                    "Unsaved Changes",
+                    MessageBoxButton.YesNoCancel,
+                    MessageBoxImage.Warning);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    SaveProjectCommand.Execute(null);
+                    if (HasUnsavedChanges()) // User cancelled save
+                        return;
+                }
+                else if (result == MessageBoxResult.Cancel)
+                {
+                    return;
+                }
+                // If No, just close without saving
+            }
+
+            // Actually close
+            Project = null;
+            ProjectRootCollection.Clear();
+            IsProjectLoaded = false;
+            SelectedComponent = null;
+            OutputMessages.Clear();
+            _lastSavedSnapshot = null;
+            StatusMessage = "Project closed";
+        }
 
         [RelayCommand]
         public async Task SaveProject()
         {
+
             if (Project == null) return;
             var dialog = new Microsoft.Win32.SaveFileDialog
             {
