@@ -23,7 +23,9 @@ namespace TestAutomation.UI.Wpf.ViewModels
         [ObservableProperty] public bool _isRunning;
         [ObservableProperty] public bool _isProjectLoaded;
         [ObservableProperty] public ObservableCollection<string> _outputMessages = new();
-     
+        [ObservableProperty] private ObservableCollection<ComponentResultViewModel> _testPlanResults = new();
+        [ObservableProperty] private bool _hasResults;
+
         public CancellationTokenSource? _cts;
         private string? _lastSavedSnapshot;
 
@@ -156,13 +158,17 @@ namespace TestAutomation.UI.Wpf.ViewModels
                 };
                 // TODO: Add logging to OutputMessages
                 var result = await Task.Run(() => runner.RunAsync(), _cts.Token);
+                TestPlanResults.Clear();
                 StatusMessage = result.Success ? "Passed" : "Failed";
                 OutputMessages.Add($"=== Execution Finished ===");
                 OutputMessages.Add($"Overall Success: {result.Success}");
                 foreach (var planResult in result.TestPlanResults)
                 {
+                    var planVm = ComponentResultViewModel.FromComponentResult(planResult);
+                    TestPlanResults.Add(planVm);
                     OutputMessages.Add($"  {planResult.Component.Name}: {(planResult.Success ? "PASS" : "FAIL")} ({planResult.DurationMs}ms)");
                 }
+                HasResults = TestPlanResults.Any();
             }
             catch (OperationCanceledException)
             {

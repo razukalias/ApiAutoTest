@@ -6,7 +6,7 @@
         xmlns:vm="clr-namespace:TestAutomation.UI.Wpf.ViewModels"
         xmlns:core="clr-namespace:TestAutomationEngine.Core;assembly=ApiAutoTest"
         xmlns:views="clr-namespace:TestAutomation.UI.Wpf.Views"
-        xmlns:editors="clr-namespace:TestAutomation.UI.Wpf.Views.Editors"
+        xmlns:editors="clr-namespace:TestAutomation.UI.Wpf.Views.Editors" xmlns:converters="clr-namespace:TestAutomation.UI.Wpf.Converters"
         mc:Ignorable="d"
         Title="Test Automation Studio" Height="900" Width="1400"
         WindowStartupLocation="CenterScreen"
@@ -18,6 +18,9 @@
 
     <Window.Resources>
         <!-- Template Selector for Component Editors -->
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <converters:BoolToPassFailIconConverter x:Key="BoolToPassFailIconConverter"/>
+        <converters:BoolToPassFailColorConverter x:Key="BoolToPassFailColorConverter"/>
         <views:ComponentEditorTemplateSelector x:Key="EditorTemplateSelector">
             <views:ComponentEditorTemplateSelector.HttpTemplate>
                 <DataTemplate>
@@ -174,11 +177,46 @@
         </Grid>
 
         <!-- Output Panel -->
-        <GroupBox Header="Output" Grid.Row="2" Margin="5">
-            <ListBox ItemsSource="{Binding OutputMessages}" 
-                     Background="Black" Foreground="LightGray"
-                     FontFamily="Consolas" FontSize="12"/>
-        </GroupBox>
+        <!-- Bottom Panel with Tabs -->
+        <TabControl Grid.Row="2" Margin="5">
+            <TabItem Header="Output">
+                <ListBox ItemsSource="{Binding OutputMessages}" 
+                 Background="Black" Foreground="LightGray"
+                 FontFamily="Consolas" FontSize="12"/>
+            </TabItem>
+            <TabItem Header="Test Results">
+                <TreeView ItemsSource="{Binding TestPlanResults}" x:Name="ResultsTree">
+                    <TreeView.Resources>
+                        <!-- Template for ComponentResultViewModel -->
+                        <HierarchicalDataTemplate DataType="{x:Type vm:ComponentResultViewModel}" ItemsSource="{Binding Children}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding StatusIcon}" FontFamily="Segoe UI" Margin="0,0,5,0"/>
+                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                                <TextBlock Text=" (" Foreground="Gray"/>
+                                <TextBlock Text="{Binding DurationMs}" Foreground="Gray"/>
+                                <TextBlock Text="ms)" Foreground="Gray"/>
+                                <TextBlock Text=" - " Foreground="Gray" Visibility="{Binding HasError, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                <TextBlock Text="{Binding ErrorMessage}" Foreground="Red" TextTrimming="CharacterEllipsis" 
+                                   Visibility="{Binding HasError, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                            </StackPanel>
+                        </HierarchicalDataTemplate>
+
+                        <!-- Template for AssertionResultViewModel (leaf) -->
+                        <DataTemplate DataType="{x:Type vm:AssertionResultViewModel}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding Passed, Converter={StaticResource BoolToPassFailIconConverter}}" Margin="0,0,5,0"/>
+                                <TextBlock Text="{Binding Message}" Foreground="{Binding Passed, Converter={StaticResource BoolToPassFailColorConverter}}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </TreeView.Resources>
+                    <TreeView.ItemContainerStyle>
+                        <Style TargetType="TreeViewItem">
+                            <Setter Property="IsExpanded" Value="True"/>
+                        </Style>
+                    </TreeView.ItemContainerStyle>
+                </TreeView>
+            </TabItem>
+        </TabControl>
 
         <!-- Status Bar -->
         <StatusBar Grid.Row="3">
