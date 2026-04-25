@@ -1,0 +1,16 @@
+﻿<UserControl x:Class="TestAutomation.UI.Wpf.Views.Editors.Auth.ApiKeyAuthEditor"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <TextBlock Text="Header Name:" Margin="0,0,0,3"/>
+        <TextBox Grid.Row="1" Text="{Binding HeaderName}" Margin="0,0,0,10"/>
+        <TextBlock Grid.Row="2" Text="API Key:" Margin="0,0,0,3"/>
+        <TextBox Grid.Row="3" Text="{Binding ApiKey}"/>
+    </Grid>
+</UserControl>
