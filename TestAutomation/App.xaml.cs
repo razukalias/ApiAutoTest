@@ -2,7 +2,7 @@
 using System.Data;
 using System.Windows;
 
-namespace AutoTestApi_UI
+namespace TestAutomation
 {
     /// <summary>
     /// Interaction logic for App.xaml

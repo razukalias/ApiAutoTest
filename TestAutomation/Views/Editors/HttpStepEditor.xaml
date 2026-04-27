@@ -4,7 +4,7 @@
              xmlns:helpers="clr-namespace:TestAutomation.UI.Wpf.Helpers"
              xmlns:core="clr-namespace:TestAutomationEngine.Core;assembly=ApiAutoTest"
              xmlns:converters="clr-namespace:TestAutomation.UI.Wpf.Converters"
-             xmlns:auth="clr-namespace:TestAutomation.UI.Wpf.Views.Editors.Auth"
+             xmlns:auth="clr-namespace:TestAutomation.UI.Wpf.Views.Editors"
              xmlns:editors="clr-namespace:TestAutomation.UI.Wpf.Views.Editors"
              xmlns:sys="clr-namespace:System;assembly=System.Runtime">
 

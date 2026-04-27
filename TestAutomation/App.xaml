@@ -1,7 +1,7 @@
-﻿<Application x:Class="AutoTestApi_UI.App"
+﻿<Application x:Class="TestAutomation.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:AutoTestApi_UI"
+             xmlns:local="clr-namespace:TestAutomation"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
          

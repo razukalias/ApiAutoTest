@@ -42,12 +42,14 @@ namespace TestAutomationEngine.Core
             httpClient.Timeout = Timeout;
             var response = await httpClient.SendAsync(request, context.CancellationToken);
             var responseBody = await response.Content.ReadAsStringAsync();
-
+            context.Log(LogLevel.ComponentExecution, $"Response Status: {(int)response.StatusCode} {response.StatusCode}");
+            context.Log(LogLevel.Verbose, $"Response Body:\n{responseBody}");
             foreach (var extract in Extractions)
             {
                 var value = extract.Extract(new { StatusCode = response.StatusCode, Body = responseBody, Headers = response.Headers });
                 context.SetVariable(extract.TargetVariable, value);
             }
+           
 
             return new ComponentResult { Component = this, Output = responseBody };
         }

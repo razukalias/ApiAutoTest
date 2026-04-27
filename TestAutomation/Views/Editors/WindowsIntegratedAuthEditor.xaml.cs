@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace AutoTestApi_UI.ViewModels.Views.Editors
+namespace TestAutomation.UI.Wpf.Views.Editors
 {
     /// <summary>
     /// Interaction logic for WindowsIntegratedAuthEditor.xaml

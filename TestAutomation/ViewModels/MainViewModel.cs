@@ -1,11 +1,14 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using TestAutomationEngine.Core;
+using ExecutionContext = TestAutomationEngine.Core.ExecutionContext;
+using LogLevel = TestAutomationEngine.Core.LogLevel;
 
 namespace TestAutomation.UI.Wpf.ViewModels
 {
@@ -28,7 +31,18 @@ namespace TestAutomation.UI.Wpf.ViewModels
 
         public CancellationTokenSource? _cts;
         private string? _lastSavedSnapshot;
+        [ObservableProperty]
+        private LogLevel _selectedLogLevel = LogLevel.ComponentExecution;
 
+        // Provide a list of log levels for the ComboBox
+        public static List<LogLevel> LogLevelOptions { get; } = new()
+{
+    LogLevel.Off,
+    LogLevel.Errors,
+    LogLevel.Summary,
+    LogLevel.ComponentExecution,
+    LogLevel.Verbose
+};
         partial void OnProjectChanged(Project? value)
         {
             IsProjectLoaded = value != null;
@@ -140,35 +154,41 @@ namespace TestAutomation.UI.Wpf.ViewModels
             }
         }
 
+      
         [RelayCommand]
-        public async Task RunProject()
+        private async Task RunProject()
         {
             if (Project == null) return;
+
+            // Cancel any previous run
+            _cts?.Cancel();
             _cts = new CancellationTokenSource();
+
             IsRunning = true;
             OutputMessages.Clear();
             StatusMessage = "Running...";
 
+            // Create a logger that writes to OutputMessages
+            var loggerProvider = new ObservableLoggerProvider(message =>
+            {
+                Application.Current.Dispatcher.Invoke(() => OutputMessages.Add(message));
+            });
+            var logger = loggerProvider.CreateLogger("TestEngine");
+
+            // Build the execution context using the selected log level
+            var context = new ExecutionContext(
+                logger: logger,
+                minLogLevel: SelectedLogLevel,   // 👈 from the dropdown
+                cancellationToken: _cts.Token
+            )
+            { EnvironmentName = Environment };
+
             try
             {
-                var runner = new ProjectRunner(Project)
-                {
-                    EnvironmentName = Environment,
-                    LogLevel = LogLevel.Verbose
-                };
-                // TODO: Add logging to OutputMessages
-                var result = await Task.Run(() => runner.RunAsync(), _cts.Token);
-                TestPlanResults.Clear();
+                var result = await Project.ExecuteAsync(context);
                 StatusMessage = result.Success ? "Passed" : "Failed";
-                OutputMessages.Add($"=== Execution Finished ===");
+                OutputMessages.Add("=== Execution Finished ===");
                 OutputMessages.Add($"Overall Success: {result.Success}");
-                foreach (var planResult in result.TestPlanResults)
-                {
-                    var planVm = ComponentResultViewModel.FromComponentResult(planResult);
-                    TestPlanResults.Add(planVm);
-                    OutputMessages.Add($"  {planResult.Component.Name}: {(planResult.Success ? "PASS" : "FAIL")} ({planResult.DurationMs}ms)");
-                }
-                HasResults = TestPlanResults.Any();
             }
             catch (OperationCanceledException)
             {
@@ -183,11 +203,8 @@ namespace TestAutomation.UI.Wpf.ViewModels
             finally
             {
                 IsRunning = false;
-                _cts?.Dispose();
-                _cts = null;
             }
         }
-
         [RelayCommand]
         public void StopRun()
         {
@@ -304,5 +321,9 @@ namespace TestAutomation.UI.Wpf.ViewModels
             }
             return null;
         }
+
+     
     }
+
+
 }

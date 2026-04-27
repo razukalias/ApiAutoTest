@@ -13,14 +13,14 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace AutoTestApi_UI.ViewModels.Views.Editors
+namespace TestAutomation.UI.Wpf.Views.Editors
 {
     /// <summary>
-    /// Interaction logic for ApiKeyAuthEditor.xaml
+    /// Interaction logic for BearerTokenAuthEditor.xaml
     /// </summary>
-    public partial class ApiKeyAuthEditor : UserControl
+    public partial class BearerTokenAuthEditor : UserControl
     {
-        public ApiKeyAuthEditor()
+        public BearerTokenAuthEditor()
         {
             InitializeComponent();
         }

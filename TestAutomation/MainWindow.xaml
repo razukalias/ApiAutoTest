@@ -75,6 +75,10 @@
             <Separator/>
             <TextBlock Text="Environment:" VerticalAlignment="Center" Margin="5,0,2,0"/>
             <TextBox Text="{Binding Environment, UpdateSourceTrigger=PropertyChanged}" Width="80" Margin="0,0,10,0"/>
+            <TextBlock Text="Log Level:" VerticalAlignment="Center" Margin="10,0,2,0"/>
+            <ComboBox ItemsSource="{Binding LogLevelOptions}" 
+          SelectedItem="{Binding SelectedLogLevel}" 
+          Width="150" Margin="0,0,10,0"/>
             <CheckBox Content="Run All" IsChecked="{Binding RunAllTestPlans}" VerticalAlignment="Center"/>
         </ToolBar>
 
