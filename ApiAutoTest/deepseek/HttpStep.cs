@@ -16,8 +16,17 @@ namespace TestAutomationEngine.Core
         public object? Body { get; set; }
         public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(30);
         public IAuthenticationStrategy? Authentication { get; set; }
-        public List<ExtractionRule> Extractions { get; set; } = new();
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string? LastRequestContent { get; set; }
 
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string? LastResponseHeaders { get; set; }
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string? LastStatusCode { get; set; }
+        public List<ExtractionRule> Extractions { get; set; } = new();
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string? LastResponseBody { get; set; }
         public override string ComponentType => "Http";
         [System.Text.Json.Serialization.JsonIgnore]
         public string BodyString
@@ -34,7 +43,11 @@ namespace TestAutomationEngine.Core
 
             if (Body != null)
                 request.Content = new StringContent(VariableResolver.Resolve(Body.ToString(), context), System.Text.Encoding.UTF8, "application/json");
-
+            if (Body != null)
+            {
+                var bodyString = VariableResolver.Resolve(Body.ToString(), context);
+                LastRequestContent = bodyString;
+            }
             if (Authentication != null)
                 await Authentication.ApplyAsync(context, this);
 
@@ -42,6 +55,10 @@ namespace TestAutomationEngine.Core
             httpClient.Timeout = Timeout;
             var response = await httpClient.SendAsync(request, context.CancellationToken);
             var responseBody = await response.Content.ReadAsStringAsync();
+            
+            LastResponseBody = responseBody;
+            LastStatusCode = ((int)response.StatusCode).ToString();
+            LastResponseHeaders = string.Join("\n", response.Headers.Select(h => $"{h.Key}: {string.Join(", ", h.Value)}"));
             context.Log(LogLevel.ComponentExecution, $"Response Status: {(int)response.StatusCode} {response.StatusCode}");
             context.Log(LogLevel.Verbose, $"Response Body:\n{responseBody}");
             foreach (var extract in Extractions)

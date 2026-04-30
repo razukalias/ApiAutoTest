@@ -6,6 +6,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using TestAutomation.UI.Wpf.Views.Editors;
 using TestAutomationEngine.Core;
 using ExecutionContext = TestAutomationEngine.Core.ExecutionContext;
 using LogLevel = TestAutomationEngine.Core.LogLevel;
@@ -72,6 +73,10 @@ namespace TestAutomation.UI.Wpf.ViewModels
 
                     StatusMessage = $"Loaded: {Project.Name}";
                     OutputMessages.Add($"Loaded project: {Project.Name}");
+                    HttpStepEditor.AvailableVariables = new List<string>(
+                                    Project.GlobalVariables.Keys
+                                   .Concat(Project.Environments.Values.SelectMany(d => d.Keys))
+);
                 }
                 catch (Exception ex)
                 {

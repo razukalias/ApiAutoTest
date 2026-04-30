@@ -57,6 +57,32 @@
                 </DataTemplate>
             </editors:AuthTypeTemplateSelector.WindowsIntegratedTemplate>
         </editors:AuthTypeTemplateSelector>
+
+        <!-- Templates for preview -->
+        <DataTemplate x:Key="JsonPreviewTemplate">
+            <TreeView x:Name="PreviewJsonTree" 
+                  SelectedItemChanged="PreviewJsonTree_SelectedItemChanged"
+                  MaxHeight="250" BorderBrush="Gray" BorderThickness="1"/>
+        </DataTemplate>
+
+        <DataTemplate x:Key="HeadersPreviewTemplate">
+            <DataGrid AutoGenerateColumns="False" SelectionChanged="HeadersGrid_SelectionChanged">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Name" Binding="{Binding Key}" Width="*"/>
+                    <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="3*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="PlainTextPreviewTemplate">
+            <TextBox Text="{Binding}" IsReadOnly="True" VerticalScrollBarVisibility="Auto"/>
+        </DataTemplate>
+
+        <!-- Source selector -->
+        <editors:ExtractionSourceTemplateSelector x:Key="ExtractionSourceTemplateSelector"
+        JsonTemplate="{StaticResource JsonPreviewTemplate}"
+        HeadersTemplate="{StaticResource HeadersPreviewTemplate}"
+        PlainTextTemplate="{StaticResource PlainTextPreviewTemplate}"/>
     </UserControl.Resources>
 
     <Grid Margin="10">
@@ -154,20 +180,65 @@
             </TabItem>
 
             <TabItem Header="Extractions">
-                <DataGrid ItemsSource="{Binding Extractions}" 
-                          AutoGenerateColumns="False" 
-                          CanUserAddRows="True"
-                          HeadersVisibility="Column"
-                          MinHeight="150">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Source" Binding="{Binding Source}" Width="150"/>
-                        <DataGridTextColumn Header="Target Variable" Binding="{Binding TargetVariable}" Width="150"/>
-                        <DataGridComboBoxColumn Header="Type" 
-                            ItemsSource="{Binding Source={StaticResource ExtractionTypeValues}}" 
-                            SelectedItemBinding="{Binding Type}" Width="120"/>
-                    </DataGrid.Columns>
-                </DataGrid>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <!-- extraction rules grid -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- source / variable dropdowns -->
+                        <RowDefinition Height="*"/>
+                        <!-- JSON tree preview -->
+                    </Grid.RowDefinitions>
+
+                    <!-- Extraction rules DataGrid (unchanged) -->
+                    <DataGrid x:Name="ExtractionDataGrid" Grid.Row="0"
+                  ItemsSource="{Binding Extractions}" 
+                  AutoGenerateColumns="False" 
+                  CanUserAddRows="True"
+                  HeadersVisibility="Column"
+                  MinHeight="100">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Source" Binding="{Binding Source}" Width="150"/>
+                            <DataGridTextColumn Header="Target Variable" Binding="{Binding TargetVariable}" Width="150"/>
+                            <DataGridComboBoxColumn Header="Type" 
+                    ItemsSource="{Binding Source={StaticResource ExtractionTypeValues}}" 
+                    SelectedItemBinding="{Binding Type}" Width="120"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- Row 1: Controls -->
+                    <Grid Grid.Row="1" Margin="0,5,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Text="Source:" VerticalAlignment="Center"/>
+                        <ComboBox Grid.Column="2" Name="SourceTypeCombo" SelectedIndex="0"
+                      SelectionChanged="SourceTypeCombo_SelectionChanged">
+                            <ComboBoxItem Content="Response Body"/>
+                            <ComboBoxItem Content="Response Headers"/>
+                            <ComboBoxItem Content="Request Body"/>
+                            <ComboBoxItem Content="Status Code"/>
+                        </ComboBox>
+
+                        <TextBlock Grid.Column="4" Text="Variable:" VerticalAlignment="Center"/>
+                        <ComboBox Grid.Column="6" Name="VariableCombo" IsEditable="True"
+                      SelectionChanged="VariableCombo_SelectionChanged"/>
+                    </Grid>
+
+                    <!-- Row 2: JSON Tree Viewer (appears for JSON sources) -->
+                    <TreeView x:Name="JsonTreeView" Grid.Row="2"
+                  SelectedItemChanged="JsonTreeView_SelectedItemChanged"
+                  MaxHeight="250" BorderBrush="Gray" BorderThickness="1"/>
+                </Grid>
             </TabItem>
+
         </TabControl>
     </Grid>
 </UserControl>

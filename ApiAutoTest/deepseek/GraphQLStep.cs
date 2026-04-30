@@ -4,12 +4,23 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using DocumentFormat.OpenXml.Wordprocessing;
 
 
 namespace TestAutomationEngine.Core
 {
     public class GraphQLStep : ComponentBase
     {
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string? LastResponseBody { get; set; }
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string? LastRequestContent { get; set; }
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string? LastResponseHeaders { get; set; }
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string? LastStatusCode { get; set; }
         public string Url { get; set; } = string.Empty;
         public string Query { get; set; } = string.Empty;
         public string? Mutation { get; set; }
@@ -19,6 +30,8 @@ namespace TestAutomationEngine.Core
         public List<ExtractionRule> Extractions { get; set; } = new();
 
         public override string ComponentType => "GraphQL";
+
+        public object Body { get;  set; }
 
         protected override async Task<ComponentResult> ExecuteCoreAsync(ExecutionContext context)
         {
@@ -35,8 +48,17 @@ namespace TestAutomationEngine.Core
             if (Authentication != null)
                 await Authentication.ApplyAsync(context, this);
 
+            if (this.Body != null)
+            {
+                var bodyString = VariableResolver.Resolve(Body.ToString(), context);
+                LastRequestContent = bodyString;
+            }
+
             var response = await httpClient.SendAsync(request, context.CancellationToken);
             var responseBody = await response.Content.ReadAsStringAsync();
+            LastResponseBody = responseBody;
+            LastStatusCode = ((int)response.StatusCode).ToString();
+            LastResponseHeaders = string.Join("\n", response.Headers.Select(h => $"{h.Key}: {string.Join(", ", h.Value)}"));
             context.Log(LogLevel.ComponentExecution, $"Response Status: {(int)response.StatusCode} {response.StatusCode}");
             context.Log(LogLevel.Verbose, $"Response Body:\n{responseBody}");
             foreach (var extract in Extractions)
