@@ -16,12 +16,87 @@ public partial class HttpStepEditor : UserControl
         InitializeComponent();
     }
 
-    private HttpStep CurrentStep => DataContext as HttpStep;
+    private HttpStep? CurrentStep => DataContext as HttpStep;
+    private void SetTargetVariableFromPath(ExtractionRule rule, string path)
+    {
+        var parts = path.Split(new[] { '.', '[' }, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length > 0)
+        {
+            string last = parts.Last().Replace("]", "").Replace("\"", "");
+            if (!string.IsNullOrWhiteSpace(last))
+                rule.TargetVariable = last;
+        }
+    }
+    private void ApplySourcePathToExtraction(string sourcePath)
+    {
+        // Get the current source type from the dropdown
+        string? currentSourceType = (SourceTypeCombo.SelectedItem as ComboBoxItem)?.Content?.ToString();
+
+        if (ExtractionDataGrid.SelectedItem is ExtractionRule rule)
+        {
+            rule.Source = sourcePath;
+            rule.SourceType = currentSourceType ?? string.Empty;   // 👈 set it
+            SetTargetVariableFromPath(rule, sourcePath);
+        }
+        else
+        {
+            var newRule = new ExtractionRule();
+            newRule.Source = sourcePath;
+            newRule.SourceType = currentSourceType ?? string.Empty; // 👈 set it
+            SetTargetVariableFromPath(newRule, sourcePath);
+
+            var extractions = DataContext is HttpStep step ? step.Extractions : null;
+            if (extractions != null)
+            {
+                extractions.Add(newRule);
+                ExtractionDataGrid.Items.Refresh();
+                ExtractionDataGrid.SelectedItem = newRule;
+                ExtractionDataGrid.ScrollIntoView(newRule);
+            }
+        }
+    }
+    private void ApplySourcePathToExtractionR(string sourcePath)
+    {
+        if (ExtractionDataGrid.SelectedItem is ExtractionRule rule)
+        {
+            // Update the selected rule
+            rule.Source = sourcePath;
+            SetTargetVariableFromPath(rule, sourcePath);
+        }
+        else
+        {
+            // No selection → create a new rule
+            var newRule = new ExtractionRule();
+            newRule.Source = sourcePath;
+            SetTargetVariableFromPath(newRule, sourcePath);
+
+            // Add to the collection
+            var extractions = DataContext is HttpStep step ? step.Extractions : null;
+            if (extractions != null)
+            {
+                extractions.Add(newRule);
+                // Refresh the DataGrid to show the new row, then select it
+                ExtractionDataGrid.Items.Refresh();
+                ExtractionDataGrid.SelectedItem = newRule;
+                // Optionally scroll into view
+                ExtractionDataGrid.ScrollIntoView(newRule);
+            }
+        }
+    }
+    private void JsonTreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+    {
+        if (JsonTreeView.SelectedItem is TreeViewItem selectedItem && selectedItem.Tag is string path)
+        {
+            ApplySourcePathToExtraction(path);
+        }
+    }
 
     private void PreviewJsonTree_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
     {
         if (sender is TreeView tv && tv.SelectedItem is TreeViewItem item && item.Tag is string path)
             UpdateSelectedExtractionRule(path);
+
+       
     }
 
     private void HeadersGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -129,13 +204,7 @@ public partial class HttpStepEditor : UserControl
         return item;
     }
 
-    private void JsonTreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
-    {
-        if (JsonTreeView.SelectedItem is TreeViewItem selectedItem && selectedItem.Tag is string path)
-        {
-            UpdateSelectedExtractionRule(path);
-        }
-    }
+  
 
     // ========== VARIABLE DROPDOWN ==========
     private void VariableCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)

@@ -69,7 +69,7 @@
             <DataGrid AutoGenerateColumns="False" SelectionChanged="HeadersGrid_SelectionChanged">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Name" Binding="{Binding Key}" Width="*"/>
-                    <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="3*"/>
+                    <DataGridTextColumn Header="Value" Binding="{Binding Value}"  Width="3*"/>
                 </DataGrid.Columns>
             </DataGrid>
         </DataTemplate>
@@ -164,6 +164,7 @@
                 <DataGrid ItemsSource="{Binding Assertions}" 
                           AutoGenerateColumns="False" 
                           CanUserAddRows="True"
+                          CanUserDeleteRows="True"
                           HeadersVisibility="Column"
                           MinHeight="150">
                     <DataGrid.Columns>
@@ -195,10 +196,13 @@
                   ItemsSource="{Binding Extractions}" 
                   AutoGenerateColumns="False" 
                   CanUserAddRows="True"
+                  CanUserDeleteRows="True"
                   HeadersVisibility="Column"
                   MinHeight="100">
                         <DataGrid.Columns>
+                            <DataGridTextColumn Header="Source Type" Binding="{Binding SourceType}" Width="120"/>
                             <DataGridTextColumn Header="Source" Binding="{Binding Source}" Width="150"/>
+                            
                             <DataGridTextColumn Header="Target Variable" Binding="{Binding TargetVariable}" Width="150"/>
                             <DataGridComboBoxColumn Header="Type" 
                     ItemsSource="{Binding Source={StaticResource ExtractionTypeValues}}" 
