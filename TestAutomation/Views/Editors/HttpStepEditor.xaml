@@ -6,7 +6,8 @@
              xmlns:converters="clr-namespace:TestAutomation.UI.Wpf.Converters"
              xmlns:auth="clr-namespace:TestAutomation.UI.Wpf.Views.Editors"
              xmlns:editors="clr-namespace:TestAutomation.UI.Wpf.Views.Editors"
-             xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+             xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+             DataContextChanged="HttpStepEditor_DataContextChanged">
 
     <UserControl.Resources>
         <!-- Enum DataProviders for Assertions & Extractions -->
@@ -116,16 +117,20 @@
         <!-- Tab Control for Headers, Body, Auth, Assertions, Extractions -->
         <TabControl Grid.Row="1">
             <TabItem Header="Headers">
-                <DataGrid ItemsSource="{Binding Headers}" 
-                          AutoGenerateColumns="False" 
-                          CanUserAddRows="True" 
-                          HeadersVisibility="Column"
-                          MinHeight="150">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Key" Binding="{Binding Key}" Width="*"/>
-                        <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="2*"/>
-                    </DataGrid.Columns>
-                </DataGrid>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Button Grid.Row="0" Content="Add Header" Click="AddHeader_Click" Margin="0,0,0,5"/>
+                    <DataGrid Grid.Row="1" x:Name="HeadersGrid" AutoGenerateColumns="False" CanUserAddRows="False"
+                  MinHeight="100">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Key" Binding="{Binding Key}" Width="*"/>
+                            <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="2*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
             </TabItem>
 
             <TabItem Header="Body">
@@ -160,26 +165,39 @@
                 </Grid>
             </TabItem>
 
+           
             <TabItem Header="Assertions">
-                <DataGrid ItemsSource="{Binding Assertions}" 
-                          AutoGenerateColumns="False" 
-                          CanUserAddRows="True"
-                          CanUserDeleteRows="True"
-                          HeadersVisibility="Column"
-                          MinHeight="150">
-                    <DataGrid.Columns>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Button Grid.Row="0" Content="Add Assertion" Click="AddAssertion_Click" Margin="0,0,0,5"/>
+                    <DataGrid Grid.Row="1" x:Name="AssertionsGrid" ItemsSource="{Binding Assertions}" 
+          
+           AutoGenerateColumns="False" 
+           CanUserAddRows="False"
+           CanUserDeleteRows="True"
+           HeadersVisibility="Column"
+           MinHeight="150">
+
+
+
+
+                        <DataGrid.Columns>
+
                         <DataGridComboBoxColumn Header="Behavior" 
-                            ItemsSource="{Binding Source={StaticResource AssertionBehaviorValues}}" 
-                            SelectedItemBinding="{Binding Behavior}" Width="100"/>
+                ItemsSource="{Binding Source={StaticResource AssertionBehaviorValues}}" 
+                SelectedItemBinding="{Binding Behavior}" Width="100"/>
                         <DataGridTextColumn Header="Path" Binding="{Binding Path}" Width="150"/>
                         <DataGridComboBoxColumn Header="Operator" 
-                            ItemsSource="{Binding Source={StaticResource OperatorValues}}" 
-                            SelectedItemBinding="{Binding Operator}" Width="120"/>
+                ItemsSource="{Binding Source={StaticResource OperatorValues}}" 
+                SelectedItemBinding="{Binding Operator}" Width="120"/>
                         <DataGridTextColumn Header="Expected" Binding="{Binding ExpectedValue}" Width="*"/>
                     </DataGrid.Columns>
                 </DataGrid>
+              </Grid>
             </TabItem>
-
             <TabItem Header="Extractions">
                 <Grid>
                     <Grid.RowDefinitions>

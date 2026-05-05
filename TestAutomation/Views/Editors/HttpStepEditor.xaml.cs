@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -14,9 +15,62 @@ public partial class HttpStepEditor : UserControl
     public HttpStepEditor()
     {
         InitializeComponent();
+        
     }
 
     private HttpStep? CurrentStep => DataContext as HttpStep;
+    private HttpStep? _currentStep;
+    private ObservableCollection<HeaderItem>? _headerItems;
+    private void HttpStepEditor_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (e.NewValue is HttpStep)
+        {
+            LoadHeaders();
+            // If you add a similar LoadAssertions method, call it here too
+        }
+    }
+    private void AddAssertion_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is ComponentBase comp)
+        {
+            var newAssertion = new DirectAssertion(); // or VariableAssertion
+            comp.Assertions.Add(newAssertion);
+            AssertionsGrid.Items.Refresh();
+            AssertionsGrid.SelectedItem = newAssertion;
+        }
+    }
+    private void LoadHeaders()
+    {
+        if (DataContext is HttpStep step)
+        {
+            _currentStep = step;
+            _headerItems = new ObservableCollection<HeaderItem>(
+                step.Headers.Select(kvp => new HeaderItem { Key = kvp.Key, Value = kvp.Value })
+            );
+            _headerItems.CollectionChanged += OnHeaderCollectionChanged;
+            foreach (var item in _headerItems)
+                item.PropertyChanged += OnHeaderItemChanged;
+            HeadersGrid.ItemsSource = _headerItems;
+        }
+    }
+    private void AddHeader_Click(object sender, RoutedEventArgs e)
+    {
+        _headerItems?.Add(new HeaderItem());
+    }
+    
+
+    private void OnHeaderCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        if (_currentStep == null) return;
+        // Rebuild dictionary
+        _currentStep.Headers = _headerItems.ToDictionary(h => h.Key, h => h.Value);
+    }
+
+    private void OnHeaderItemChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        // Update dictionary when key or value changes
+        _currentStep.Headers = _headerItems.ToDictionary(h => h.Key, h => h.Value);
+    }
     private void SetTargetVariableFromPath(ExtractionRule rule, string path)
     {
         var parts = path.Split(new[] { '.', '[' }, StringSplitOptions.RemoveEmptyEntries);

@@ -1,4 +1,6 @@
 ﻿// DirectAssertion.cs
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -48,5 +50,9 @@ namespace TestAutomationEngine.Core
                 return ca.CompareTo(cb);
             return 0;
         }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        protected void OnPropertyChanged([CallerMemberName] string? name = null) =>
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 }
