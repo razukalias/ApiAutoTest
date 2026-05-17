@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using TestAutomation.UI.Wpf.ViewModels;
 using TestAutomationEngine.Core;
 
 namespace TestAutomation.UI.Wpf.Views.Editors;
@@ -12,31 +13,166 @@ namespace TestAutomation.UI.Wpf.Views.Editors;
 public partial class HttpStepEditor : UserControl
 {
     public static List<string> AvailableVariables { get; set; } = new();
+    // ========== ASSERTIONS PICKER ==========
+
+    private void AssertionsGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        // When user selects a different assertion row, reflect its SourceType
+        // in the combo so the tree updates to match.
+        if (AssertionsGrid.SelectedItem is AssertionViewModel vm)
+        {
+            string source = vm.SourceType;
+            for (int i = 0; i < AssertionSourceCombo.Items.Count; i++)
+            {
+                if ((AssertionSourceCombo.Items[i] as ComboBoxItem)?.Content?.ToString() == source)
+                {
+                    AssertionSourceCombo.SelectedIndex = i;
+                    return;
+                }
+            }
+            AssertionSourceCombo.SelectedIndex = 0; // default to Response Body
+        }
+    }
+
+    private void AssertionSourceCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (CurrentStep == null) return;
+        string? selected = (e.AddedItems.Count > 0
+            ? (e.AddedItems[0] as ComboBoxItem)?.Content?.ToString()
+            : null);
+
+        switch (selected)
+        {
+            case "Response Body":
+                ShowAssertionJsonPreview(CurrentStep.LastResponseBody);
+                break;
+            case "Request Body":
+                ShowAssertionJsonPreview(CurrentStep.LastRequestContent);
+                break;
+            case "Response Headers":
+                ShowAssertionHeadersPreview(CurrentStep.LastResponseHeaders);
+                break;
+            case "Status Code":
+                AssertionJsonTreeView.Items.Clear();
+                AssertionJsonTreeView.Items.Add(
+                    new TreeViewItem
+                    {
+                        Header = CurrentStep.LastStatusCode ?? "N/A",
+                        Tag = CurrentStep.LastStatusCode ?? ""
+                    });
+                break;
+        }
+    }
+
+    private void ShowAssertionJsonPreview(string? json)
+    {
+        AssertionJsonTreeView.Items.Clear();
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            AssertionJsonTreeView.Items.Add(new TreeViewItem { Header = "No data available" });
+            return;
+        }
+        try
+        {
+            var token = JToken.Parse(json);
+            AssertionJsonTreeView.Items.Add(CreateJsonTreeItem(token, "$")); // reuse existing helper
+        }
+        catch
+        {
+            AssertionJsonTreeView.Items.Add(new TreeViewItem { Header = "Invalid JSON" });
+        }
+    }
+
+    private void ShowAssertionHeadersPreview(string? headersText)
+    {
+        AssertionJsonTreeView.Items.Clear();
+        if (string.IsNullOrWhiteSpace(headersText))
+        {
+            AssertionJsonTreeView.Items.Add(new TreeViewItem { Header = "No headers" });
+            return;
+        }
+        foreach (var line in headersText.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var parts = line.Split(": ", 2);
+            var key = parts[0];
+            var val = parts.Length > 1 ? parts[1] : "";
+            AssertionJsonTreeView.Items.Add(new TreeViewItem
+            {
+                Header = $"{key}: {val}",
+                Tag = key   // header name becomes the "path"
+            });
+        }
+    }
+
+    private void AssertionJsonTreeView_SelectedItemChanged(
+        object sender, RoutedPropertyChangedEventArgs<object> e)
+    {
+        if (AssertionJsonTreeView.SelectedItem is TreeViewItem item && item.Tag is string path)
+        {
+            ApplyPathToAssertion(path);
+        }
+    }
+
+    private void ApplyPathToAssertion(string path)
+    {
+        string sourceType = (AssertionSourceCombo.SelectedItem as ComboBoxItem)
+                            ?.Content?.ToString() ?? "Response Body";
+
+        if (AssertionsGrid.SelectedItem is AssertionViewModel vm)
+        {
+            vm.Path = path;
+            vm.SourceType = sourceType;
+        }
+        else
+        {
+            var newVm = new AssertionViewModel { Path = path, SourceType = sourceType };
+           // _assertionViewModels?.Add(newVm);
+            AssertionsGrid.SelectedItem = newVm;
+        }
+    }
     public HttpStepEditor()
     {
         InitializeComponent();
-        
+   
     }
 
     private HttpStep? CurrentStep => DataContext as HttpStep;
     private HttpStep? _currentStep;
     private ObservableCollection<HeaderItem>? _headerItems;
+    //private ObservableCollection<AssertionViewModel>? _assertionViewModels;
+
     private void HttpStepEditor_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
         if (e.NewValue is HttpStep)
         {
             LoadHeaders();
-            // If you add a similar LoadAssertions method, call it here too
+           LoadAssertions();  // was missing
         }
+    }
+
+    private void LoadAssertions()
+    {
+        if (DataContext is not ComponentBase comp) return;
+        // The Assertions ObservableCollection is already bound via {Binding Assertions}
+        // Just verify it's populated
+        System.Diagnostics.Debug.WriteLine($"Assertions loaded: {comp.Assertions.Count}");
     }
     private void AddAssertion_Click(object sender, RoutedEventArgs e)
     {
         if (DataContext is ComponentBase comp)
         {
-            var newAssertion = new DirectAssertion(); // or VariableAssertion
+            var newAssertion = new DirectAssertion
+            {
+                Behavior = AssertionBehavior.Assert,
+                Path = "",
+                Operator = Operator.Equals,
+                ExpectedValue = ""
+            };
             comp.Assertions.Add(newAssertion);
-            AssertionsGrid.Items.Refresh();
+
+            // Select the new row
             AssertionsGrid.SelectedItem = newAssertion;
+            AssertionsGrid.ScrollIntoView(newAssertion);
         }
     }
     private void LoadHeaders()

@@ -1,9 +1,11 @@
 ﻿// ComponentBase.cs
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
-
+using System.Collections.ObjectModel;
+using System.Text.Json.Serialization;
 
 namespace TestAutomationEngine.Core
 {
@@ -11,8 +13,9 @@ namespace TestAutomationEngine.Core
     {
         public string Name { get; set; } = string.Empty;
         public Guid Guid { get; set; } = Guid.NewGuid();
-        public Dictionary<string, Variable> ScopedVariables { get; } = new();
-        public List<IAssertion> Assertions { get; } = new();
+        public Dictionary<string, Variable> ScopedVariables { get; set; } = new();
+        [JsonInclude]
+        public ObservableCollection<IAssertion> Assertions { get; set; } = new();
         public ScriptStep? BeforeExecute { get; set; }
         public ScriptStep? AfterExecute { get; set; }
         public RetryPolicy? RetryPolicy { get; set; }

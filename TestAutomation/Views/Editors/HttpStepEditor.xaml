@@ -165,38 +165,76 @@
                 </Grid>
             </TabItem>
 
-           
+
             <TabItem Header="Assertions">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
+                        <!-- Add button -->
                         <RowDefinition Height="*"/>
+                        <!-- DataGrid -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- Source / controls row -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- JSON tree picker -->
                     </Grid.RowDefinitions>
-                    <Button Grid.Row="0" Content="Add Assertion" Click="AddAssertion_Click" Margin="0,0,0,5"/>
-                    <DataGrid Grid.Row="1" x:Name="AssertionsGrid" ItemsSource="{Binding Assertions}" 
-          
-           AutoGenerateColumns="False" 
-           CanUserAddRows="False"
-           CanUserDeleteRows="True"
-           HeadersVisibility="Column"
-           MinHeight="150">
 
+                    <Button Grid.Row="0" Content="Add Assertion"
+                Click="AddAssertion_Click" Margin="0,0,0,5"/>
 
-
-
+                    <DataGrid Grid.Row="1" x:Name="AssertionsGrid"
+                  ItemsSource="{Binding Assertions}"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="True"
+                  CanUserDeleteRows="True"
+                  HeadersVisibility="Column"
+                  MinHeight="120"
+                  SelectionChanged="AssertionsGrid_SelectionChanged">
                         <DataGrid.Columns>
+                            <DataGridComboBoxColumn Header="Behavior"
+                    ItemsSource="{Binding Source={StaticResource AssertionBehaviorValues}}"
+                    SelectedItemBinding="{Binding Behavior}" Width="100"/>
+                            <DataGridTextColumn Header="Source"
+                    Binding="{Binding SourceType}" Width="120"
+                    IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Path / Variable"
+                    Binding="{Binding Path}" Width="160"/>
+                            <DataGridComboBoxColumn Header="Operator"
+                    ItemsSource="{Binding Source={StaticResource OperatorValues}}"
+                    SelectedItemBinding="{Binding Operator}" Width="120"/>
+                            <DataGridTextColumn Header="Expected"
+                    Binding="{Binding ExpectedValue}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
 
-                        <DataGridComboBoxColumn Header="Behavior" 
-                ItemsSource="{Binding Source={StaticResource AssertionBehaviorValues}}" 
-                SelectedItemBinding="{Binding Behavior}" Width="100"/>
-                        <DataGridTextColumn Header="Path" Binding="{Binding Path}" Width="150"/>
-                        <DataGridComboBoxColumn Header="Operator" 
-                ItemsSource="{Binding Source={StaticResource OperatorValues}}" 
-                SelectedItemBinding="{Binding Operator}" Width="120"/>
-                        <DataGridTextColumn Header="Expected" Binding="{Binding ExpectedValue}" Width="*"/>
-                    </DataGrid.Columns>
-                </DataGrid>
-              </Grid>
+                    <!-- Row 2: Source picker controls (same layout as Extractions) -->
+                    <Grid Grid.Row="2" Margin="0,6,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Pick from:" VerticalAlignment="Center"/>
+                        <ComboBox Grid.Column="2"
+                      x:Name="AssertionSourceCombo"
+                      SelectedIndex="0"
+                      SelectionChanged="AssertionSourceCombo_SelectionChanged">
+                            <ComboBoxItem Content="Response Body"/>
+                            <ComboBoxItem Content="Response Headers"/>
+                            <ComboBoxItem Content="Request Body"/>
+                            <ComboBoxItem Content="Status Code"/>
+                        </ComboBox>
+                    </Grid>
+
+                    <!-- Row 3: JSON tree picker (same control reused from Extractions) -->
+                    <TreeView x:Name="AssertionJsonTreeView"
+                  Grid.Row="3"
+                  SelectedItemChanged="AssertionJsonTreeView_SelectedItemChanged"
+                  MaxHeight="200"
+                  Margin="0,4,0,0"
+                  BorderBrush="Gray"
+                  BorderThickness="1"/>
+                </Grid>
             </TabItem>
             <TabItem Header="Extractions">
                 <Grid>

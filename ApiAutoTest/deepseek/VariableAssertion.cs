@@ -9,7 +9,12 @@ namespace TestAutomationEngine.Core
         public string Variable { get; set; } = string.Empty;
         public Operator Operator { get; set; }
         public object? ExpectedValue { get; set; }
-
+        public string Path
+        {
+            get => Variable;
+            set => Variable = value;
+        }
+      
         public async Task<AssertionResult> AssertAsync(ComponentResult result, ExecutionContext context)
         {
             var actual = context.GetVariable(Variable);
